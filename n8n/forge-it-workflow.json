@@ -1,0 +1,155 @@
+{
+  "name": "Forge It",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "forge-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User ID: {{ $json.userId }}\nApps requested: {{ $json.apps.join(', ') }}\nGPU type: {{ $json.gpu }}",
+        "options": {
+          "systemMessage": "Translate the user's app list and GPU type into a comma-separated string of Arch Linux package names. Use official Arch Linux / AUR package names. If GPU is NVIDIA, include nvidia-dkms and nvidia-utils in the list. Output ONLY the comma-separated package string with no explanation, no markdown, no extra text."
+        }
+      },
+      "id": "node-agent",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [340, 0]
+    },
+    {
+      "parameters": {
+        "model": "gemini-1.5-pro-latest",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "node-gemini",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [240, 240]
+    },
+    {
+      "parameters": {
+        "sessionId": "={{ $('Webhook').item.json.userId }}"
+      },
+      "id": "node-redis",
+      "name": "Redis Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1,
+      "position": [440, 240]
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "workflow",
+        "operation": "dispatch",
+        "owner": "Rish3666",
+        "repository": "forge-it-engine",
+        "workflow": "build-iso.yml",
+        "ref": "main",
+        "inputs": "={{ { packages: $json.output, userId: $('Webhook').item.json.userId, gpu: $('Webhook').item.json.gpu } }}"
+      },
+      "id": "node-github",
+      "name": "GitHub",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [620, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'accepted', message: 'Forge process initiated for ' + $('Webhook').item.json.userId, packages: $('AI Agent').item.json.output }) }}",
+        "options": {
+          "responseCode": 202,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "node-respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [840, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "meta": {
+    "n8nVersion": "1.0.0"
+  }
+}

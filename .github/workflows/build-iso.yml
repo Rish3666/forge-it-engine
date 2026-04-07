@@ -1,0 +1,85 @@
+name: Build Arch Linux ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Arch Linux packages'
+        required: true
+      userId:
+        description: 'User ID'
+        required: true
+      gpu:
+        description: 'GPU Type'
+        required: true
+
+env:
+  PACKAGES: ${{ github.event.inputs.packages }}
+  USER_ID:  ${{ github.event.inputs.userId }}
+  GPU:      ${{ github.event.inputs.gpu }}
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged  # required for loop devices used by mkarchiso
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize pacman keyring
+        run: |
+          pacman-key --init
+          pacman-key --populate archlinux
+
+      - name: Update mirrors & install build tools
+        run: |
+          pacman -Sy --noconfirm archiso squashfs-tools libisoburn
+
+      - name: Log build parameters
+        run: |
+          echo "================================================"
+          echo "  Forge It ISO Builder"
+          echo "================================================"
+          echo "  User ID  : $USER_ID"
+          echo "  GPU      : $GPU"
+          echo "  Packages : $PACKAGES"
+          echo "================================================"
+
+      - name: Inject user packages into releng profile
+        run: |
+          # Convert comma-separated packages to one-per-line and append
+          echo ""                                    >> ./releng/packages.x86_64
+          echo "# --- Forge It User Packages ---"    >> ./releng/packages.x86_64
+          echo "$PACKAGES" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep -v '^$' >> ./releng/packages.x86_64
+          echo ""
+          echo "Final package list:"
+          cat ./releng/packages.x86_64
+
+      - name: Build the ISO
+        run: |
+          mkarchiso -v \
+            -w /tmp/forge-work \
+            -o /tmp/forge-out \
+            ./releng
+
+      - name: List output
+        run: ls -lh /tmp/forge-out/
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-it-${{ env.USER_ID }}-iso
+          path: /tmp/forge-out/*.iso
+          retention-days: 3
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-it-${{ env.USER_ID }}-build-log
+          path: /tmp/forge-work/
+          retention-days: 1

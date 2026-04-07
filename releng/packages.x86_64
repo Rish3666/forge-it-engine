@@ -1,0 +1,58 @@
+# =============================================
+# Forge It OS — Base Package List (packages.x86_64)
+# User-selected apps are injected here at build time
+# by the GitHub Actions workflow via n8n dispatch.
+# =============================================
+
+# --- Core System ---
+base
+base-devel
+linux
+linux-headers
+linux-firmware
+mkinitcpio
+
+# --- Boot ---
+grub
+efibootmgr
+syslinux
+dosfstools
+mtools
+
+# --- System Essentials ---
+sudo
+shadow
+bash
+zsh
+neofetch
+htop
+man-db
+man-pages
+
+# --- Networking ---
+networkmanager
+network-manager-applet
+openssh
+curl
+wget
+
+# --- Development Tools ---
+git
+vim
+nano
+
+# --- Arch Utilities ---
+archinstall
+arch-install-scripts
+reflector
+pacman-contrib
+
+# --- Display (base Wayland/X11 support) ---
+xorg-server
+xorg-xinit
+mesa
+
+# =============================================
+# NOTE: User-selected packages from Forge It
+# are appended below this line at build time.
+# =============================================
