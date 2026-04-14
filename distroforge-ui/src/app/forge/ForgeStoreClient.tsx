@@ -1,0 +1,205 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Cpu,
+  Terminal,
+  Monitor,
+  Package,
+  Rocket,
+  ShoppingCart,
+  Search,
+  Bell,
+  Settings,
+} from "lucide-react";
+import DistroGrid from "@/components/DistroGrid";
+import BuildCartSidebar from "@/components/BuildCartSidebar";
+
+// Wizard step sidebar config
+const wizardNav = [
+  { id: "core", label: "Core Base", Icon: Cpu },
+  { id: "kernel", label: "Kernel", Icon: Terminal },
+  { id: "drivers", label: "Drivers", Icon: Monitor },
+  { id: "store", label: "Linux Store", Icon: ShoppingCart },
+  { id: "finalize", label: "Finalize", Icon: Rocket },
+];
+
+export default function ForgeStoreClient() {
+  const [activeStep] = useState("store");
+  const [selectedPackages, setSelectedPackages] = useState<string[]>([
+    "discord",
+    "firefox",
+  ]);
+
+  return (
+    <div className="min-h-screen bg-[#121317] text-[#e3e2e8] font-body">
+      {/* ── Top Nav ── */}
+      <nav
+        id="forge-top-nav"
+        className="fixed top-0 w-full z-50 flex justify-between items-center px-12 h-20 bg-[#121317]"
+      >
+        <div className="flex items-center gap-8">
+          <span className="text-2xl font-black tracking-tighter text-primary font-headline">
+            Cybernetic Forge
+          </span>
+          <div className="hidden md:flex space-x-6">
+            {["Dashboard", "Forge", "Gallery", "Docs"].map((l, i) => (
+              <a
+                key={l}
+                href="#"
+                className={`font-label text-sm uppercase tracking-widest transition-colors ${
+                  i === 1
+                    ? "text-primary border-b-2 border-primary pb-1"
+                    : "text-[#343439] hover:text-primary"
+                }`}
+              >
+                {l}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-6">
+          {/* Search pill */}
+          <div className="bg-[#292a2e] px-4 py-2 rounded-full flex items-center gap-3">
+            <Search size={16} className="text-[#343439]" />
+            <input
+              id="forge-search"
+              type="text"
+              className="bg-transparent border-none focus:ring-0 text-sm w-48 text-[#e3e2e8] placeholder-[#343439]"
+              placeholder="Search components..."
+            />
+          </div>
+          <button
+            id="forge-notifications-btn"
+            className="hover:bg-[#292a2e] p-2 rounded-full transition-colors"
+            aria-label="Notifications"
+          >
+            <Bell size={20} className="text-primary" />
+          </button>
+          <button
+            id="forge-settings-btn"
+            className="hover:bg-[#292a2e] p-2 rounded-full transition-colors"
+            aria-label="Settings"
+          >
+            <Settings size={20} className="text-primary" />
+          </button>
+          {/* User avatar */}
+          <div className="w-10 h-10 rounded-full bg-primary-container overflow-hidden border-2 border-primary/20 flex items-center justify-center text-white font-bold text-sm font-headline">
+            R
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Left Sidebar (Build Wizard) ── */}
+      <aside
+        id="forge-left-sidebar"
+        className="fixed left-0 top-20 h-[calc(100vh-5rem)] flex flex-col py-8 overflow-y-auto w-64 bg-[#1a1b20]"
+      >
+        <div className="px-6 mb-8">
+          <h2 className="font-headline font-bold text-[#e3e2e8]">
+            Build Wizard
+          </h2>
+          <p className="font-label text-xs uppercase tracking-widest text-primary/60">
+            Step 4 of 5
+          </p>
+        </div>
+
+        {/* Progress bar */}
+        <div className="px-6 mb-6">
+          <div className="h-1 bg-[#292a2e] rounded-full relative overflow-hidden">
+            <div
+              className="absolute top-0 left-0 h-full bg-secondary-container rounded-full shadow-green-glow transition-all duration-500"
+              style={{ width: "75%" }}
+            />
+          </div>
+        </div>
+
+        {/* Nav items */}
+        <div className="flex flex-col space-y-1">
+          {wizardNav.map(({ id, label, Icon }) => {
+            const isActive = id === activeStep;
+            return (
+              <a
+                key={id}
+                id={`wizard-nav-${id}`}
+                href="#"
+                className={`flex items-center space-x-4 px-4 py-3 mx-2 rounded-full transition-all font-label text-xs uppercase tracking-widest font-bold ${
+                  isActive
+                    ? "bg-secondary-container text-[#121317] shadow-green-glow"
+                    : "text-[#343439] hover:text-primary"
+                }`}
+              >
+                <Icon size={18} />
+                <span>{label}</span>
+              </a>
+            );
+          })}
+        </div>
+
+        {/* Build ISO button at bottom */}
+        <div className="mt-auto px-4">
+          <button
+            id="forge-build-iso-btn"
+            className="w-full py-4 rounded-full btn-primary font-headline font-bold uppercase tracking-widest text-sm"
+          >
+            Build ISO
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main Content ── */}
+      <main className="ml-64 mr-80 pt-28 pb-12 px-12 min-h-screen">
+        {/* Step progress dots */}
+        <div className="flex items-center justify-between mb-16 max-w-4xl mx-auto">
+          <div className="flex-1 h-1 bg-[#292a2e] relative">
+            {/* Filled portion: 75% (step 4 of 5) */}
+            <div className="absolute top-0 left-0 h-full w-[75%] bg-secondary-container shadow-green-glow" />
+            {[0, 25, 50, 75, 100].map((pos, i) => {
+              const isDone = i < 3;
+              const isActive = i === 3;
+              return (
+                <div
+                  key={pos}
+                  className={`absolute -top-3 w-8 h-8 rounded-full flex items-center justify-center text-xs font-label font-bold transition-all ${
+                    isDone
+                      ? "bg-[#292a2e] border-2 border-secondary-container text-secondary-container"
+                      : isActive
+                      ? "bg-[#121317] border-2 border-secondary-container text-secondary-container shadow-green-glow shadow-lg"
+                      : "bg-[#292a2e] border-2 border-[#4f4255] text-[#4f4255]"
+                  }`}
+                  style={{ left: `calc(${pos}% - 16px)` }}
+                >
+                  {isDone ? "✓" : i + 1}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Page header */}
+        <header className="mb-12">
+          <h1 className="text-6xl font-black font-headline tracking-tighter mb-4 text-[#e3e2e8]">
+            Linux Store
+          </h1>
+          <p className="text-[#d2c1d7] max-w-2xl text-lg leading-relaxed">
+            Select your visual environment and toolsets. Each addition is
+            optimized for the forge kernel.
+          </p>
+        </header>
+
+        {/* Grid: desktop environments + packages */}
+        <DistroGrid
+          onSelectionChange={(pkgs) => setSelectedPackages(pkgs)}
+        />
+      </main>
+
+      {/* ── Right: Build Cart ── */}
+      <BuildCartSidebar
+        onNext={() => console.log("Navigate to final review")}
+        onExport={() => console.log("Export config JSON")}
+        onClearAll={() => setSelectedPackages([])}
+      />
+    </div>
+  );
+}

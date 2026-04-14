@@ -1,0 +1,115 @@
+/* =========================================================
+   DistroForge — Cybernetic Forge Global Styles
+   Design system: "Systemic Elegance" — High-End Editorial
+   ========================================================= */
+
+/* NOTE: @import must be the very first declarations in CSS */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono&display=swap");
+@import "tailwindcss";
+
+/* ---- Base ---- */
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #0b0c10;
+  color: #e3e2e8;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Glassmorphism utility ----
+   Floating elements must use glass effect per Cybernetic Forge spec:
+   surface_variant at 40% opacity + 12-20px backdrop blur */
+.glass-card {
+  background: rgba(52, 52, 57, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(79, 66, 85, 0.15);
+}
+
+.glass-card-strong {
+  background: rgba(52, 52, 57, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(79, 66, 85, 0.2);
+}
+
+/* ---- Text gradient (primary CTA treatment) ---- */
+.text-gradient-primary {
+  background: linear-gradient(135deg, #e5b5ff 0%, #b026ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ---- Gradient button ---- */
+.btn-primary {
+  background: linear-gradient(135deg, #e5b5ff 0%, #b026ff 100%);
+  color: #fffdff;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  border-radius: 1rem;
+  transition: transform 0.15s ease;
+  box-shadow: 0 20px 40px rgba(176, 38, 255, 0.15);
+}
+.btn-primary:hover {
+  transform: scale(0.97);
+}
+
+/* ---- Terminal cursor blink ---- */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.cursor-blink {
+  animation: cursor-blink 1s step-end infinite;
+}
+
+/* ---- Ambient purple glow for hero ---- */
+.hero-gradient-overlay {
+  background:
+    radial-gradient(circle at top right, rgba(176, 38, 255, 0.15), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(86, 255, 168, 0.05), transparent 40%);
+}
+
+/* ---- Scanline texture for terminal (subtle) ---- */
+.terminal-scanline {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.01) 2px,
+    rgba(255, 255, 255, 0.01) 4px
+  );
+}
+
+/* ---- Ghost border (accessibility: outline-variant at 15% opacity) ---- */
+.ghost-border {
+  border: 1px solid rgba(79, 66, 85, 0.15);
+}
+
+/* ---- Selection colors ---- */
+::selection {
+  background: rgba(176, 38, 255, 0.3);
+  color: #fffdff;
+}
+
+/* ---- Scrollbar (webkit) ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0e12;
+}
+::-webkit-scrollbar-thumb {
+  background: #343439;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e5b5ff;
+}
