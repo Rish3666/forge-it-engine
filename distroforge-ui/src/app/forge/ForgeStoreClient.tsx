@@ -7,7 +7,6 @@ import {
   Cpu,
   Terminal,
   Monitor,
-  Package,
   Rocket,
   ShoppingCart,
   Search,
@@ -17,6 +16,11 @@ import {
 } from "lucide-react";
 import DistroGrid from "@/components/DistroGrid";
 import BuildCartSidebar from "@/components/BuildCartSidebar";
+import {
+  desktopEnvironments,
+  softwarePackages,
+  type BuildCartItem,
+} from "@/data/mockData";
 
 // Wizard step sidebar config
 const wizardNav = [
@@ -30,6 +34,7 @@ const wizardNav = [
 export default function ForgeStoreClient() {
   const router = useRouter();
   const [activeStep] = useState("store");
+  const [selectedDesktop, setSelectedDesktop] = useState("gnome");
   const [selectedPackages, setSelectedPackages] = useState<string[]>([
     "discord",
     "firefox",
@@ -37,7 +42,37 @@ export default function ForgeStoreClient() {
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildError, setBuildError] = useState<string | null>(null);
 
+  const selectedDesktopData =
+    desktopEnvironments.find((desktop) => desktop.id === selectedDesktop) ??
+    desktopEnvironments[0];
+  const selectedPackageItems = selectedPackages
+    .map((pkgId) => softwarePackages.find((pkg) => pkg.id === pkgId))
+    .filter((pkg): pkg is (typeof softwarePackages)[number] => Boolean(pkg));
+  const cartItems: BuildCartItem[] = [
+    {
+      id: "base",
+      label: "Base Foundation",
+      name: "Arch Linux",
+      sizeMb: 650,
+      isBase: true,
+    },
+    {
+      id: selectedDesktopData.id,
+      label: "User Interface",
+      name: selectedDesktopData.name,
+      sizeMb: selectedDesktopData.sizeMb,
+      isBase: true,
+    },
+    ...selectedPackageItems.map((pkg) => ({
+      id: pkg.id,
+      label: "Package",
+      name: pkg.name,
+      sizeMb: pkg.sizeMb,
+    })),
+  ];
+
   const handleBuildISO = async () => {
+    const userId = `user_${Date.now()}`;
     setIsBuilding(true);
     setBuildError(null);
     try {
@@ -45,18 +80,18 @@ export default function ForgeStoreClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: `user_${Date.now()}`,
+          userId,
           distro: "arch",
           gpu: "Generic",
           apps: selectedPackages,
-          desktop: "gnome",
+          desktop: selectedDesktop,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       // Navigate to the building page with resolved packages in URL
       const params = new URLSearchParams({
-        userId: data.userId ?? "anonymous",
+        userId: data.userId ?? userId,
         distro: "arch",
         packages: data.packages ?? selectedPackages.join(","),
       });
@@ -256,15 +291,22 @@ export default function ForgeStoreClient() {
 
         {/* Grid: desktop environments + packages */}
         <DistroGrid
-          onSelectionChange={(pkgs) => setSelectedPackages(pkgs)}
+          selectedDesktop={selectedDesktop}
+          selectedPackages={selectedPackages}
+          onDesktopChange={setSelectedDesktop}
+          onSelectionChange={setSelectedPackages}
         />
       </main>
 
       {/* ── Right: Build Cart ── */}
       <BuildCartSidebar
+        items={cartItems}
         onNext={() => console.log("Navigate to final review")}
         onExport={() => console.log("Export config JSON")}
         onClearAll={() => setSelectedPackages([])}
+        onRemoveItem={(id) =>
+          setSelectedPackages((prev) => prev.filter((pkgId) => pkgId !== id))
+        }
       />
     </div>
   );

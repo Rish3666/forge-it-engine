@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
@@ -64,7 +64,7 @@ const BUILD_LOGS = [
   "[forge] Build complete. Uploading artifact…",
 ];
 
-export default function BuildingPage() {
+function BuildingPageContent() {
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId") ?? "anonymous";
   const distro = searchParams.get("distro") ?? "arch";
@@ -91,9 +91,16 @@ export default function BuildingPage() {
 
   // Initial poll + interval
   useEffect(() => {
-    pollStatus();
-    const interval = setInterval(pollStatus, 8000);
-    return () => clearInterval(interval);
+    const initialPoll = setTimeout(() => {
+      void pollStatus();
+    }, 0);
+    const interval = setInterval(() => {
+      void pollStatus();
+    }, 8000);
+    return () => {
+      clearTimeout(initialPoll);
+      clearInterval(interval);
+    };
   }, [pollStatus]);
 
   // Advance the fake terminal log every 4s
@@ -300,5 +307,21 @@ export default function BuildingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BuildingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#0b0c10] text-[#e3e2e8] flex items-center justify-center px-6">
+          <div className="font-label text-sm uppercase tracking-widest text-zinc-400">
+            Loading build status...
+          </div>
+        </div>
+      }
+    >
+      <BuildingPageContent />
+    </Suspense>
   );
 }

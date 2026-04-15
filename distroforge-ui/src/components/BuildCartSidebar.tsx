@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { CheckCircle2, Download, Trash2, ArrowRight } from "lucide-react";
-import { defaultCartItems, type BuildCartItem } from "@/data/mockData";
+import { type BuildCartItem } from "@/data/mockData";
 
 // ---- BuildCartSidebar component ----
 // Renders: sticky right-side receipt with live manifest and size tracker.
@@ -11,10 +10,11 @@ import { defaultCartItems, type BuildCartItem } from "@/data/mockData";
 //              "Clear All" should reset the forge session.
 
 export interface BuildCartSidebarProps {
-  readonly items?: BuildCartItem[];
+  readonly items: BuildCartItem[];
   readonly onNext?: () => void;
   readonly onExport?: () => void;
   readonly onClearAll?: () => void;
+  readonly onRemoveItem?: (id: string) => void;
 }
 
 function formatSize(mb: number): string {
@@ -23,24 +23,17 @@ function formatSize(mb: number): string {
 }
 
 export default function BuildCartSidebar({
-  items: externalItems,
+  items,
   onNext,
   onExport,
   onClearAll,
+  onRemoveItem,
 }: BuildCartSidebarProps) {
-  // Items are managed internally if no external state is provided
-  const [items, setItems] = useState<BuildCartItem[]>(
-    externalItems ?? defaultCartItems
-  );
-
   const handleRemoveItem = (id: string) => {
-    // Base items cannot be removed (isBase flag)
-    setItems((prev) => prev.filter((item) => item.id === id ? item.isBase : true));
+    onRemoveItem?.(id);
   };
 
   const handleClearAll = () => {
-    // Keep base items even when clearing
-    setItems((prev) => prev.filter((item) => item.isBase));
     onClearAll?.();
   };
 

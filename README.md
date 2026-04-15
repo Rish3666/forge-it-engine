@@ -38,10 +38,10 @@ Frontend (React)
 ## Enterprise Setup
 
 ### 1. Database (Supabase)
-Run the [database/schema.sql](file:///Users/rishvarma/Documents/forge-it-engine/database/schema.sql) in your Supabase SQL editor to create the `package_dictionary`. Use this to map your "App Names" (e.g. `vscode`) to "Package Names" (e.g. `code`).
+Run `database/schema.sql` in your Supabase SQL editor to create the `package_dictionary`. Use this to map your "App Names" (e.g. `vscode`) to "Package Names" (e.g. `code`).
 
 ### 2. n8n Enterprise Workflow
-Import the [n8n/forge-enterprise-workflow.json](file:///Users/rishvarma/Documents/forge-it-engine/n8n/forge-enterprise-workflow.json).
+Import `n8n/distroforge-enterprise-rag.json`.
 - **PostgreSQL Node**: Set up your connection to Supabase.
 - **GitHub Node**: Assign your Personal Access Token.
 
@@ -60,12 +60,14 @@ POST /webhook/forge-enterprise
 
 ```
 forge-it-engine/
-├── .github/
-│   └── workflows/
-│       └── forge-v2.yml           ← Unified mkosi Builder
 ├── database/
 │   └── schema.sql                 ← RAG Dictionary Schema
 ├── n8n/
-│   └── forge-enterprise-workflow.json
+│   ├── distroforge-arch-builder.json
+│   └── distroforge-enterprise-rag.json
+├── distroforge-ui/
+│   └── src/
+│       └── app/
+│           └── api/forge/         ← Next.js API proxy/status routes
 └── README.md
 ```

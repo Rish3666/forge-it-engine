@@ -14,6 +14,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN ?? "";
 const GITHUB_REPO = process.env.GITHUB_REPO ?? "Rish3666/forge-it-engine";
+const WORKFLOW_FILE = "build-iso.yml";
+
+interface GitHubArtifact {
+  name: string;
+  archive_download_url: string;
+}
+
+interface GitHubRun {
+  id: number;
+  status: string;
+  conclusion: string | null;
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -35,9 +47,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const targetName = `forge-it-${userId}-${distro}`;
+
     // List recent workflow runs for build-iso.yml
     const runsRes = await fetch(
-      `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/build-iso.yml/runs?per_page=10`,
+      `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}/runs?per_page=20`,
       {
         headers: {
           Authorization: `Bearer ${GITHUB_TOKEN}`,
@@ -54,18 +68,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const runs = await runsRes.json();
-    // Find the most recent run matching this user (by artifact name prefix)
-    const targetName = `forge-it-${userId}-${distro}`;
-    const run = runs.workflow_runs?.[0]; // Most recent run
+    const runs = (await runsRes.json()).workflow_runs as GitHubRun[] | undefined;
 
-    if (!run) {
+    if (!runs?.length) {
       return NextResponse.json({ status: "not_found", artifactName: targetName });
     }
 
-    // If completed, get the artifact download URL
-    let downloadUrl: string | null = null;
-    if (run.status === "completed" && run.conclusion === "success") {
+    for (const run of runs) {
       const artifactsRes = await fetch(
         `https://api.github.com/repos/${GITHUB_REPO}/actions/runs/${run.id}/artifacts`,
         {
@@ -75,21 +84,35 @@ export async function GET(request: NextRequest) {
           },
         }
       );
-      const artifacts = await artifactsRes.json();
-      const artifact = artifacts.artifacts?.find((a: { name: string }) =>
-        a.name.startsWith(`forge-it-${userId}`)
-      );
+
+      if (!artifactsRes.ok) {
+        continue;
+      }
+
+      const artifacts = (await artifactsRes.json()).artifacts as
+        | GitHubArtifact[]
+        | undefined;
+      const artifact = artifacts?.find((candidate) => candidate.name === targetName);
+
       if (artifact) {
-        downloadUrl = artifact.archive_download_url;
+        return NextResponse.json({
+          status: run.status,
+          conclusion: run.conclusion,
+          runId: run.id,
+          artifactName: targetName,
+          downloadUrl:
+            run.status === "completed" && run.conclusion === "success"
+              ? artifact.archive_download_url
+              : null,
+        });
       }
     }
 
     return NextResponse.json({
-      status: run.status, // queued | in_progress | completed
-      conclusion: run.conclusion, // success | failure | null
-      runId: run.id,
+      status: "not_found",
+      conclusion: null,
       artifactName: targetName,
-      downloadUrl,
+      downloadUrl: null,
     });
   } catch (err) {
     console.error("[/api/forge/status] Error:", err);

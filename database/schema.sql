@@ -167,7 +167,7 @@ CREATE POLICY "Public read-only access to package_dictionary"
 
 CREATE POLICY "Users can read their own builds"
   ON build_history FOR SELECT
-  USING (true);  -- Lock this down by userId when auth is implemented
+  USING (auth.uid() IS NOT NULL AND auth.uid()::text = user_id);
 
 -- ----------------------------------------------------------------
 -- Helpful query: Look up packages for a given distro + app list

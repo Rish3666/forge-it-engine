@@ -8,15 +8,7 @@ import { featureBlocks, navLinks } from "@/data/mockData";
 // Renders: Nav bar, hero headline + CTAs, feature block grid, and the quiz CTA section.
 // Backend hook: The "Start the Forge" button should fire a wizard initialization API call.
 
-export interface HeroSectionProps {
-  readonly onStartForge?: () => void;
-  readonly onBrowseDirectory?: () => void;
-}
-
-export default function HeroSection({
-  onStartForge,
-  onBrowseDirectory,
-}: HeroSectionProps) {
+export default function HeroSection() {
   return (
     <div className="min-h-screen hero-gradient-overlay">
       {/* ── Top Navigation ── */}

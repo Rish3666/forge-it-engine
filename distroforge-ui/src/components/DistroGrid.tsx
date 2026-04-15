@@ -23,6 +23,9 @@ import {
 // Backend hook: Selected IDs should be sent to /api/forge/packages as a POST.
 
 export interface DistroGridProps {
+  readonly selectedDesktop: string;
+  readonly selectedPackages: string[];
+  readonly onDesktopChange?: (desktopId: string) => void;
   readonly onSelectionChange?: (selected: string[]) => void;
 }
 
@@ -53,18 +56,14 @@ function PkgIcon({
   );
 }
 
-export default function DistroGrid({ onSelectionChange }: DistroGridProps) {
-  const [selectedDE, setSelectedDE] = useState<string>("gnome");
-  const [selectedPackages, setSelectedPackages] = useState<string[]>([
-    "discord",
-    "firefox",
-  ]);
+export default function DistroGrid({
+  selectedDesktop,
+  selectedPackages,
+  onDesktopChange,
+  onSelectionChange,
+}: DistroGridProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const handleSelectDE = (id: string) => {
-    setSelectedDE(id);
-  };
 
   const handleTogglePackage = (pkg: SoftwarePackage) => {
     let next: string[];
@@ -73,7 +72,6 @@ export default function DistroGrid({ onSelectionChange }: DistroGridProps) {
     } else {
       next = [...selectedPackages, pkg.id];
     }
-    setSelectedPackages(next);
     onSelectionChange?.(next);
   };
 
@@ -105,7 +103,7 @@ export default function DistroGrid({ onSelectionChange }: DistroGridProps) {
       <section id="desktop-envs-section" className="mb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {desktopEnvironments.map((de) => {
-            const isSelected = selectedDE === de.id;
+            const isSelected = selectedDesktop === de.id;
             return (
               <div
                 key={de.id}
@@ -113,11 +111,11 @@ export default function DistroGrid({ onSelectionChange }: DistroGridProps) {
                 className={`glass-card p-6 rounded-[1rem] group hover:border-primary/40 transition-all flex flex-col items-center text-center relative overflow-hidden cursor-pointer ${
                   isSelected ? "border-primary shadow-primary-md" : ""
                 }`}
-                onClick={() => handleSelectDE(de.id)}
+                onClick={() => onDesktopChange?.(de.id)}
                 role="radio"
                 aria-checked={isSelected}
                 tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && handleSelectDE(de.id)}
+                onKeyDown={(e) => e.key === "Enter" && onDesktopChange?.(de.id)}
               >
                 {/* Size badge */}
                 <div className="absolute top-0 right-0 p-4 font-label text-[10px] text-primary bg-primary/10 rounded-bl-[1rem] font-bold">

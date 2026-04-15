@@ -28,44 +28,27 @@
         "promptType": "define",
         "text": "=User ID: {{ $json.userId }}\nApps requested: {{ $json.apps.join(', ') }}\nDesktop environment: {{ $json.desktop }}\nGPU type: {{ $json.gpu }}",
         "options": {
-          "systemMessage": "You are a Linux package resolver for Arch Linux. Translate the user's app list, desktop environment, and GPU type into an exact comma-separated string of official Arch Linux pacman package names. Rules:\n1. Use ONLY official archlinux.org package names — no AUR unless absolutely necessary.\n2. If GPU is NVIDIA, always add: nvidia-dkms,nvidia-utils,lib32-nvidia-utils\n3. If GPU is AMD, always add: mesa,vulkan-radeon,lib32-mesa\n4. Map desktop environments: kde→plasma, gnome→gnome, hyprland→hyprland, xfce→xfce4\n5. Output ONLY the comma-separated string — no explanation, no markdown, no extra text."
+          "systemMessage": "You are a Linux package resolver for Arch Linux. Translate the user's app list, desktop environment, and GPU type into an exact comma-separated string of official Arch Linux pacman package names. Rules:\n1. Use ONLY official archlinux.org package names - no AUR unless absolutely necessary.\n2. If GPU is NVIDIA, always add: nvidia-dkms,nvidia-utils,lib32-nvidia-utils\n3. If GPU is AMD, always add: mesa,vulkan-radeon,lib32-mesa\n4. Map desktop environments: kde->plasma, gnome->gnome, hyprland->hyprland, xfce->xfce4\n5. Output ONLY the comma-separated string - no explanation, no markdown, no extra text."
         }
       }
     },
     {
       "id": "a1b2c3d4-0003-4abc-8abc-aabbcc001003",
-      "name": "Google Gemini Chat Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [400, 520],
       "parameters": {
-        "modelName": "models/gemini-1.5-pro-latest",
+        "model": "groq/compound-mini",
         "options": {
           "temperature": 0.1,
           "maxOutputTokens": 512
         }
       },
       "credentials": {
-        "googlePalmApi": {
+        "groqApi": {
           "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
-          "name": "Google Gemini (PaLM) API — DistroForge"
-        }
-      }
-    },
-    {
-      "id": "a1b2c3d4-0004-4abc-8abc-aabbcc001004",
-      "name": "Redis Chat Memory",
-      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
-      "typeVersion": 1.2,
-      "position": [640, 520],
-      "parameters": {
-        "sessionId": "={{ $('Webhook').item.json.userId }}",
-        "sessionTTL": 3600
-      },
-      "credentials": {
-        "redis": {
-          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
-          "name": "Redis — DistroForge"
+          "name": "Groq API — DistroForge"
         }
       }
     },
@@ -133,23 +116,12 @@
         ]
       ]
     },
-    "Google Gemini Chat Model": {
+    "Groq Chat Model": {
       "ai_languageModel": [
         [
           {
             "node": "AI Agent",
             "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Redis Chat Memory": {
-      "ai_memory": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_memory",
             "index": 0
           }
         ]
@@ -201,7 +173,7 @@
   },
   "_importInstructions": {
     "step1_credentials": "After importing, go to Credentials and create 3 credentials:",
-    "cred_1": "Google Gemini (PaLM) API — paste your Gemini API key",
+    "cred_1": "Groq API — paste your Groq API key",
     "cred_2": "Redis — set host/port for your Redis instance",
     "cred_3": "GitHub PAT — paste your github_pat_... token",
     "step2_activate": "Then click 'Activate' in the top-right of the workflow to enable the webhook.",
