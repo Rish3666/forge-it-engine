@@ -71,8 +71,13 @@ export default function ForgeStoreClient() {
     })),
   ];
 
-  const handleBuildISO = async () => {
-    const userId = `user_${Date.now()}`;
+  const handleForgeSubmit = async (formData: {
+    distro: string;
+    selectedApps: string[];
+    gpuType: string;
+    desktopEnv: string;
+  }) => {
+    const userId = `user_${Math.random().toString(36).substring(2, 9)}`;
     setIsBuilding(true);
     setBuildError(null);
     try {
@@ -81,19 +86,36 @@ export default function ForgeStoreClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
-          distro: "arch",
-          gpu: "Generic",
-          apps: selectedPackages,
-          desktop: selectedDesktop,
+          distro: formData.distro,
+          apps: formData.selectedApps,
+          gpu: formData.gpuType,
+          desktop: formData.desktopEnv,
         }),
       });
-      if (!res.ok) throw new Error(await res.text());
+
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => null);
+        const errorMessage =
+          errorBody?.error ??
+          "Forge failed to start. Check n8n logs.";
+        throw new Error(errorMessage);
+      }
+
       const data = await res.json();
+      const resolvedPackageString =
+        typeof data.packages === "string"
+          ? data.packages
+          : data.packages?.packages ?? formData.selectedApps.join(" ");
+      const resolvedDistro =
+        typeof data.packages?.distro === "string"
+          ? data.packages.distro
+          : formData.distro;
+
       // Navigate to the building page with resolved packages in URL
       const params = new URLSearchParams({
         userId: data.userId ?? userId,
-        distro: "arch",
-        packages: data.packages ?? selectedPackages.join(","),
+        distro: resolvedDistro,
+        packages: resolvedPackageString,
       });
       router.push(`/forge/building?${params.toString()}`);
     } catch (err) {
@@ -233,7 +255,14 @@ export default function ForgeStoreClient() {
           )}
           <button
             id="forge-build-iso-btn"
-            onClick={handleBuildISO}
+            onClick={() =>
+              void handleForgeSubmit({
+                distro: "arch",
+                selectedApps: selectedPackages,
+                gpuType: "NVIDIA",
+                desktopEnv: selectedDesktop,
+              })
+            }
             disabled={isBuilding}
             className="w-full py-4 rounded-full btn-primary font-headline font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
           >
