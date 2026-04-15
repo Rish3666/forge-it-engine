@@ -1,0 +1,34 @@
+name: Fedora ISO Builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: "Packages to include"
+        required: true
+      userId:
+        description: "User Identifier"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+      options: --privileged
+    steps:
+      - name: Install Lorax
+        run: dnf install -y lorax fedora-kickstarts
+
+      - name: Generate ISO
+        run: |
+          # Build the ISO using livemedia-creator.
+          livemedia-creator --make-iso --no-virt --ks /usr/share/fedora-kickstarts/fedora-live-workstation.ks --project "Custom Fedora" --releasever 40
+          mkdir output
+          mv *.iso output/fedora-${{ github.event.inputs.userId }}.iso
+
+      - name: Upload Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: fedora-custom-${{ github.event.inputs.userId }}
+          path: output/*.iso

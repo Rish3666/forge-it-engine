@@ -1,0 +1,35 @@
+name: Arch ISO Builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: "List of packages to install"
+        required: true
+      userId:
+        description: "ID of the user"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm archiso sed
+
+      - name: Setup Profile
+        run: |
+          cp -r /usr/share/archiso/configs/releng/ /tmp/build
+          echo "${{ github.event.inputs.packages }}" >> /tmp/build/packages.x86_64
+
+      - name: Build ISO
+        run: mkarchiso -v -w /tmp/archiso-workspace -o /tmp/out /tmp/build
+
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch-custom-${{ github.event.inputs.userId }}
+          path: /tmp/out/*.iso
