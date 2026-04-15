@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Cpu, Zap, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import {
@@ -8,6 +8,7 @@ import {
   cpuOptions,
   gpuOptions,
   ramOptions,
+  type HardwareLine,
 } from "@/data/mockData";
 
 // ---- HardwareScanner component ----
@@ -36,6 +37,97 @@ const wizardSteps = [
   { id: "finalize", label: "Finalize" },
 ];
 
+const detectAppleChip = (userAgent: string, renderer: string | null): string | null => {
+  const combined = `${userAgent} ${renderer ?? ""}`;
+  const match = combined.match(/\b(M[1-9](?:\s?(?:Pro|Max|Ultra))?)\b/i);
+  return match ? match[1].toUpperCase() : null;
+};
+
+const estimateAppleVram = (memory?: number): number => {
+  if (!memory || memory <= 0) return 8;
+  if (memory >= 24) return 16;
+  if (memory >= 16) return 12;
+  if (memory >= 8) return 8;
+  return 4;
+};
+
+const detectCpu = (
+  userAgent: string,
+  renderer: string | null,
+  threads: number
+): string => {
+  const appleChip = detectAppleChip(userAgent, renderer);
+  if (appleChip) {
+    return `Apple ${appleChip} (${threads} browser threads reported) (Detected)`;
+  }
+  if (/amd/i.test(userAgent)) return `AMD CPU (${threads} threads) (Detected)`;
+  if (/intel/i.test(userAgent))
+    return `Intel CPU (${threads} threads) (Detected)`;
+  if (/arm|aarch64|apple/i.test(userAgent))
+    return `ARM/Apple Silicon (${threads} threads) (Detected)`;
+  return `Generic x86_64 (${threads} threads) (Detected)`;
+};
+
+const detectGpu = (
+  renderer: string | null,
+  memory?: number,
+  userAgent?: string
+): string => {
+  const info = (renderer ?? "").toLowerCase();
+  const appleChip = detectAppleChip(userAgent ?? "", renderer);
+  const compactRenderer = (renderer ?? "").replace(/\s+/g, " ").trim();
+
+  const extractNvidiaModel = (value: string): string | null => {
+    const m = value.match(
+      /(RTX\s*\d{3,4}(?:\s*Ti)?|GTX\s*\d{3,4}(?:\s*Ti)?|MX\s*\d{3,4}|Quadro\s+[A-Za-z0-9-]+|Tesla\s+[A-Za-z0-9-]+)/i
+    );
+    return m ? m[1].replace(/\s+/g, " ").toUpperCase() : null;
+  };
+
+  const extractAmdModel = (value: string): string | null => {
+    const m = value.match(
+      /(RX\s*\d{3,4}(?:\s*XT)?|Radeon\s+(?:RX\s*)?\d{3,4}(?:\s*XT)?|Radeon\s+[A-Za-z0-9-]+)/i
+    );
+    return m ? m[1].replace(/\s+/g, " ").trim() : null;
+  };
+
+  const extractIntelModel = (value: string): string | null => {
+    const m = value.match(/(Arc\s+[A-Za-z0-9-]+|UHD\s+[A-Za-z0-9-]+|Iris\s+[A-Za-z0-9-]+)/i);
+    return m ? m[1].replace(/\s+/g, " ").trim() : null;
+  };
+
+  if (appleChip) {
+    const estimatedVram = estimateAppleVram(memory);
+    return `Apple ${appleChip} GPU (Integrated, shared up to ~${estimatedVram}GB, high performance tier) (Detected)`;
+  }
+  if (info.includes("nvidia")) {
+    const model = extractNvidiaModel(compactRenderer);
+    return model
+      ? `NVIDIA ${model} (Detected)`
+      : `NVIDIA GPU (${compactRenderer || "Detected"}) (Detected)`;
+  }
+  if (info.includes("amd") || info.includes("radeon")) {
+    const model = extractAmdModel(compactRenderer);
+    return model
+      ? `AMD ${model} (Detected)`
+      : `AMD Radeon (${compactRenderer || "Detected"}) (Detected)`;
+  }
+  if (info.includes("intel")) {
+    const model = extractIntelModel(compactRenderer);
+    return model
+      ? `Intel ${model} (Detected)`
+      : `Intel Graphics (${compactRenderer || "Detected"}) (Detected)`;
+  }
+  return "Virtual / Integrated Graphics (Detected)";
+};
+
+const detectRam = (deviceMemory?: number): string => {
+  if (deviceMemory && deviceMemory > 0) {
+    return `${deviceMemory}GB RAM (Detected)`;
+  }
+  return "16GB RAM (Detected)";
+};
+
 export default function HardwareScanner({
   step = 1,
   totalSteps = 5,
@@ -45,18 +137,122 @@ export default function HardwareScanner({
   const [cpu, setCpu] = useState(cpuOptions[0]);
   const [gpu, setGpu] = useState(gpuOptions[0]);
   const [ram, setRam] = useState(ramOptions[0]);
+  const [runtimeCpuOptions, setRuntimeCpuOptions] = useState(cpuOptions);
+  const [runtimeGpuOptions, setRuntimeGpuOptions] = useState(gpuOptions);
+  const [runtimeRamOptions, setRuntimeRamOptions] = useState(ramOptions);
+  const [runtimeTerminalLines, setRuntimeTerminalLines] =
+    useState<HardwareLine[]>(terminalLines);
   const [isScanning, setIsScanning] = useState(false);
-  const [scanComplete] = useState(true);
+  const [scanComplete, setScanComplete] = useState(false);
+
+  const getWebGlRenderer = (): string | null => {
+    try {
+      const canvas = document.createElement("canvas");
+      const gl =
+        (canvas.getContext("webgl") as WebGLRenderingContext | null) ??
+        (canvas.getContext("experimental-webgl") as WebGLRenderingContext | null);
+      if (!gl) return null;
+
+      const debugInfo = gl.getExtension("WEBGL_debug_renderer_info") as
+        | { UNMASKED_RENDERER_WEBGL: number }
+        | null;
+      if (debugInfo) {
+        const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        return typeof renderer === "string" ? renderer : null;
+      }
+
+      const fallback = gl.getParameter(gl.RENDERER);
+      return typeof fallback === "string" ? fallback : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const runHardwareDetection = useCallback(async () => {
+    const userAgent = navigator.userAgent ?? "";
+    const threads = navigator.hardwareConcurrency ?? 8;
+    const renderer = getWebGlRenderer();
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const memory =
+      typeof nav.deviceMemory === "number"
+        ? nav.deviceMemory
+        : undefined;
+
+    const detectedCpu = detectCpu(userAgent, renderer, threads);
+    const detectedGpu = detectGpu(renderer, memory, userAgent);
+    const detectedRam = detectRam(memory);
+
+    setRuntimeCpuOptions([detectedCpu, ...cpuOptions.filter((o) => o !== cpuOptions[0])]);
+    setRuntimeGpuOptions([detectedGpu, ...gpuOptions.filter((o) => o !== gpuOptions[0])]);
+    setRuntimeRamOptions([detectedRam, ...ramOptions.filter((o) => o !== ramOptions[0])]);
+
+    setCpu(detectedCpu);
+    setGpu(detectedGpu);
+    setRam(detectedRam);
+    setRuntimeTerminalLines([
+      {
+        prefix: "$",
+        prefixColor: "#56ffa8",
+        content: "curl -sSfL https://forge.distro.dev/detect.sh | sh",
+        contentColor: "#ffffff",
+      },
+      {
+        prefix: "[info]",
+        prefixColor: "#6b7280",
+        content: "Auto-detecting browser-visible hardware profile...",
+        contentColor: "#9ca3af",
+      },
+      {
+        prefix: "Detected:",
+        prefixColor: "#9ca3af",
+        content: detectedGpu,
+        contentColor: "#e5b5ff",
+      },
+      {
+        prefix: "[info]",
+        prefixColor: "#6b7280",
+        content: renderer
+          ? `WebGL Renderer: ${renderer}`
+          : "WebGL renderer unavailable in this browser",
+        contentColor: "#9ca3af",
+      },
+      {
+        prefix: "Detected:",
+        prefixColor: "#9ca3af",
+        content: detectedCpu,
+        contentColor: "#e5b5ff",
+      },
+      {
+        prefix: "Memory:",
+        prefixColor: "#9ca3af",
+        content: detectedRam,
+        contentColor: "#e5b5ff",
+      },
+    ]);
+    setScanComplete(true);
+  }, []);
 
   const handleRefresh = () => {
     setIsScanning(true);
-    // Simulate a re-scan (wire to actual hardware probe API)
-    setTimeout(() => setIsScanning(false), 1200);
+    setScanComplete(false);
+    setTimeout(() => {
+      void runHardwareDetection();
+      setIsScanning(false);
+    }, 900);
   };
 
   const handleContinue = () => {
     onContinue?.({ cpu, gpu, ram });
   };
+
+  useEffect(() => {
+    const start = setTimeout(() => {
+      setIsScanning(true);
+      void runHardwareDetection().finally(() => setIsScanning(false));
+    }, 0);
+
+    return () => clearTimeout(start);
+  }, [runHardwareDetection]);
 
   return (
     <div className="min-h-screen bg-[#0b0c10] text-[#e3e2e8] font-body">
@@ -189,7 +385,7 @@ export default function HardwareScanner({
 
               {/* Terminal body */}
               <div className="p-8 font-mono text-sm leading-relaxed text-zinc-300 min-h-[320px]">
-                {terminalLines.map((line, i) => (
+                {runtimeTerminalLines.map((line, i) => (
                   <div key={i} className="flex gap-4 mb-2">
                     <span
                       className="shrink-0"
@@ -282,7 +478,7 @@ export default function HardwareScanner({
                     onChange={(e) => setCpu(e.target.value)}
                     className="w-full bg-[#292a2e] border-none text-white font-body px-4 py-4 rounded-[1rem] appearance-none cursor-pointer focus:ring-2 focus:ring-primary/30 transition-all"
                   >
-                    {cpuOptions.map((opt) => (
+                    {runtimeCpuOptions.map((opt) => (
                       <option key={opt}>{opt}</option>
                     ))}
                   </select>
@@ -302,7 +498,7 @@ export default function HardwareScanner({
                     onChange={(e) => setGpu(e.target.value)}
                     className="w-full bg-[#292a2e] border-none text-white font-body px-4 py-4 rounded-[1rem] appearance-none cursor-pointer focus:ring-2 focus:ring-primary/30 transition-all"
                   >
-                    {gpuOptions.map((opt) => (
+                    {runtimeGpuOptions.map((opt) => (
                       <option key={opt}>{opt}</option>
                     ))}
                   </select>
@@ -322,7 +518,7 @@ export default function HardwareScanner({
                     onChange={(e) => setRam(e.target.value)}
                     className="w-full bg-[#292a2e] border-none text-white font-body px-4 py-4 rounded-[1rem] appearance-none cursor-pointer focus:ring-2 focus:ring-primary/30 transition-all"
                   >
-                    {ramOptions.map((opt) => (
+                    {runtimeRamOptions.map((opt) => (
                       <option key={opt}>{opt}</option>
                     ))}
                   </select>

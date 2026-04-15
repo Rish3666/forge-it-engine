@@ -21,7 +21,7 @@ import { NextRequest, NextResponse } from "next/server";
 // }
 
 const N8N_WEBHOOK_URL =
-  process.env.N8N_WEBHOOK_URL ?? "http://localhost:5678/webhook/forge-request";
+  process.env.N8N_WEBHOOK_URL ?? "http://localhost:55000/webhook/forge-request";
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,8 +61,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: 202 });
   } catch (err) {
     console.error("[/api/forge] Unexpected error:", err);
+    const message =
+      err instanceof Error && /fetch failed|ECONNREFUSED|ENOTFOUND/i.test(err.message)
+        ? "Cannot reach n8n webhook. Set N8N_WEBHOOK_URL or start n8n on port 55000."
+        : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }
