@@ -1,15 +1,13 @@
-# DISTROFORGE PROJECT CONTEXT
+# Project context: DistroForge Engine
+**Objective**: Automate custom Linux ISO builds (Arch, Ubuntu, Fedora) via a Webhook -> n8n -> GitHub pipeline.
 
-## Mission
-To automate creation of custom Linux ISOs via a Webhook -> n8n -> GitHub Actions pipeline.
+## Current Infrastructure
+- **Webhook**: Receives `{ "distro": "arch", "apps": ["firefox"], "userId": "user123" }`.
+- **AI Agent**: Groq Llama-3 + Tavily Search.
+- **n8n Output**: Must be a JSON object: `{ "packages": "string", "distro": "string" }`.
+- **GitHub Target**: `.github/workflows/{{distro}}-builder.yml`.
 
-## System Architecture
-1. Webhook receives `{apps: [], distro: "", gpu: "", userId: ""}`.
-2. AI Agent (Groq) uses Tavily Search to find package names for the selected distro.
-3. Structured parser forces AI output `{ "packages": "string", "distro": "string" }`.
-4. GitHub node dispatches to `.github/workflows/{{distro}}-builder.yml`.
-
-## Strict Output Rules
-- `packages` must be only a space-separated string (no commas).
-- No conversational filler.
-- Distro must be lowercase: `arch`, `ubuntu`, or `fedora`.
+## Strict Requirements
+1. **Packages**: Must be a space-separated string of valid names for the specific distro's package manager (pacman/apt/dnf).
+2. **Filenames**: Workflows must be named exactly `arch-builder.yml`, `ubuntu-builder.yml`, and `fedora-builder.yml`.
+3. **Inputs**: All workflows must accept `packages` (string) and `userId` (string) via `workflow_dispatch`.
