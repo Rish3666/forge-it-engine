@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Cpu, Zap, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import {
   terminalLines,
@@ -63,24 +64,33 @@ export default function HardwareScanner({
       <nav
         id="hw-top-nav"
         className="bg-[#121317]/40 backdrop-blur-xl fixed top-0 w-full z-50"
+        suppressHydrationWarning
       >
         <div className="flex justify-between items-center px-12 py-6 max-w-[1920px] mx-auto">
-          <div className="text-2xl font-black tracking-tighter text-white uppercase font-headline">
+          <Link
+            href="/"
+            className="text-2xl font-black tracking-tighter text-white uppercase font-headline hover:text-primary transition-colors"
+          >
             DistroForge
-          </div>
+          </Link>
           <div className="hidden md:flex items-center gap-8 font-label text-sm">
-            {["Directory", "The Forge", "Sponsor", "GitHub"].map((l, i) => (
-              <a
-                key={l}
-                href="#"
+            {[
+              { label: "Directory", href: "/forge" },
+              { label: "The Forge", href: "/forge", active: true },
+              { label: "Sponsor", href: "/" },
+              { label: "GitHub", href: "https://github.com" },
+            ].map((l) => (
+              <Link
+                key={l.label}
+                href={l.href}
                 className={
-                  i === 1
+                  l.active
                     ? "text-primary font-bold border-b-2 border-primary pb-1"
                     : "text-zinc-400 hover:text-zinc-100 transition-colors"
                 }
               >
-                {l}
-              </a>
+                {l.label}
+              </Link>
             ))}
           </div>
           <button
@@ -118,7 +128,10 @@ export default function HardwareScanner({
       </aside>
 
       {/* ── Main Content ── */}
-      <main className="pt-32 pb-24 px-12 max-w-[1400px] mx-auto min-h-screen">
+      <main
+        className="pt-32 pb-24 px-12 max-w-[1400px] mx-auto min-h-screen"
+        suppressHydrationWarning
+      >
         {/* Step header */}
         <div className="mb-12 flex items-center justify-between">
           <div className="space-y-1">

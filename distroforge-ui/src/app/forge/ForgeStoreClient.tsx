@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Cpu,
   Terminal,
@@ -11,6 +13,7 @@ import {
   Search,
   Bell,
   Settings,
+  Loader2,
 } from "lucide-react";
 import DistroGrid from "@/components/DistroGrid";
 import BuildCartSidebar from "@/components/BuildCartSidebar";
@@ -25,36 +28,81 @@ const wizardNav = [
 ];
 
 export default function ForgeStoreClient() {
+  const router = useRouter();
   const [activeStep] = useState("store");
   const [selectedPackages, setSelectedPackages] = useState<string[]>([
     "discord",
     "firefox",
   ]);
+  const [isBuilding, setIsBuilding] = useState(false);
+  const [buildError, setBuildError] = useState<string | null>(null);
+
+  const handleBuildISO = async () => {
+    setIsBuilding(true);
+    setBuildError(null);
+    try {
+      const res = await fetch("/api/forge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: `user_${Date.now()}`,
+          distro: "arch",
+          gpu: "Generic",
+          apps: selectedPackages,
+          desktop: "gnome",
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      // Navigate to the building page with resolved packages in URL
+      const params = new URLSearchParams({
+        userId: data.userId ?? "anonymous",
+        distro: "arch",
+        packages: data.packages ?? selectedPackages.join(","),
+      });
+      router.push(`/forge/building?${params.toString()}`);
+    } catch (err) {
+      setBuildError(err instanceof Error ? err.message : "Build failed");
+      setIsBuilding(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#121317] text-[#e3e2e8] font-body">
+    <div
+      className="min-h-screen bg-[#121317] text-[#e3e2e8] font-body"
+      suppressHydrationWarning
+    >
       {/* ── Top Nav ── */}
       <nav
         id="forge-top-nav"
         className="fixed top-0 w-full z-50 flex justify-between items-center px-12 h-20 bg-[#121317]"
+        suppressHydrationWarning
       >
         <div className="flex items-center gap-8">
-          <span className="text-2xl font-black tracking-tighter text-primary font-headline">
+          <Link
+            href="/"
+            className="text-2xl font-black tracking-tighter text-primary font-headline hover:text-white transition-colors"
+          >
             Cybernetic Forge
-          </span>
+          </Link>
           <div className="hidden md:flex space-x-6">
-            {["Dashboard", "Forge", "Gallery", "Docs"].map((l, i) => (
-              <a
-                key={l}
-                href="#"
+            {[
+              { label: "Dashboard", href: "/" },
+              { label: "Forge", href: "/forge", active: true },
+              { label: "Gallery", href: "/" },
+              { label: "Docs", href: "/" },
+            ].map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
                 className={`font-label text-sm uppercase tracking-widest transition-colors ${
-                  i === 1
+                  link.active
                     ? "text-primary border-b-2 border-primary pb-1"
                     : "text-[#343439] hover:text-primary"
                 }`}
               >
-                {l}
-              </a>
+                {link.label}
+              </Link>
             ))}
           </div>
         </div>
@@ -95,6 +143,7 @@ export default function ForgeStoreClient() {
       <aside
         id="forge-left-sidebar"
         className="fixed left-0 top-20 h-[calc(100vh-5rem)] flex flex-col py-8 overflow-y-auto w-64 bg-[#1a1b20]"
+        suppressHydrationWarning
       >
         <div className="px-6 mb-8">
           <h2 className="font-headline font-bold text-[#e3e2e8]">
@@ -119,11 +168,14 @@ export default function ForgeStoreClient() {
         <div className="flex flex-col space-y-1">
           {wizardNav.map(({ id, label, Icon }) => {
             const isActive = id === activeStep;
+            // Map wizard steps to routes
+            const stepRoute = id === "core" ? "/forge/hardware" : "/forge";
+
             return (
-              <a
+              <Link
                 key={id}
                 id={`wizard-nav-${id}`}
-                href="#"
+                href={stepRoute}
                 className={`flex items-center space-x-4 px-4 py-3 mx-2 rounded-full transition-all font-label text-xs uppercase tracking-widest font-bold ${
                   isActive
                     ? "bg-secondary-container text-[#121317] shadow-green-glow"
@@ -132,24 +184,38 @@ export default function ForgeStoreClient() {
               >
                 <Icon size={18} />
                 <span>{label}</span>
-              </a>
+              </Link>
             );
           })}
         </div>
 
         {/* Build ISO button at bottom */}
-        <div className="mt-auto px-4">
+        <div className="mt-auto px-4 space-y-2">
+          {buildError && (
+            <p className="text-error text-[10px] font-label text-center">
+              {buildError}
+            </p>
+          )}
           <button
             id="forge-build-iso-btn"
-            className="w-full py-4 rounded-full btn-primary font-headline font-bold uppercase tracking-widest text-sm"
+            onClick={handleBuildISO}
+            disabled={isBuilding}
+            className="w-full py-4 rounded-full btn-primary font-headline font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
           >
-            Build ISO
+            {isBuilding ? (
+              <><Loader2 size={18} className="animate-spin" /> Building…</>
+            ) : (
+              "Build ISO"
+            )}
           </button>
         </div>
       </aside>
 
       {/* ── Main Content ── */}
-      <main className="ml-64 mr-80 pt-28 pb-12 px-12 min-h-screen">
+      <main
+        className="ml-64 mr-80 pt-28 pb-12 px-12 min-h-screen"
+        suppressHydrationWarning
+      >
         {/* Step progress dots */}
         <div className="flex items-center justify-between mb-16 max-w-4xl mx-auto">
           <div className="flex-1 h-1 bg-[#292a2e] relative">

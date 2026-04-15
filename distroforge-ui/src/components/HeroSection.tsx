@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ArrowRight, Star } from "lucide-react";
 import { featureBlocks, navLinks } from "@/data/mockData";
 
@@ -22,17 +23,21 @@ export default function HeroSection({
       <nav
         id="top-nav"
         className="fixed top-0 w-full z-50 bg-[#121317]/40 backdrop-blur-xl"
+        suppressHydrationWarning
       >
         <div className="flex justify-between items-center px-12 py-6 max-w-[1920px] mx-auto">
           {/* Wordmark */}
-          <div className="text-2xl font-black tracking-tighter text-white uppercase font-headline">
+          <Link
+            href="/"
+            className="text-2xl font-black tracking-tighter text-white uppercase font-headline hover:text-primary transition-colors"
+          >
             DistroForge
-          </div>
+          </Link>
 
           {/* Nav links */}
           <div className="hidden md:flex gap-12 font-label">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 className={
@@ -42,7 +47,7 @@ export default function HeroSection({
                 }
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -66,7 +71,7 @@ export default function HeroSection({
       </nav>
 
       {/* ── Hero ── */}
-      <main className="pt-32">
+      <main className="pt-32" suppressHydrationWarning>
         <section
           id="hero"
           className="max-w-6xl mx-auto px-6 py-24 text-center"
@@ -82,24 +87,22 @@ export default function HeroSection({
             no friction. Just the pure power of Linux, tailored to your metal.
           </p>
 
-          {/* CTAs */}
           <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-            <a
+            <Link
               id="hero-start-forge-btn"
-              href="#quiz"
-              onClick={onStartForge}
+              href="/forge/hardware"
               className="w-full md:w-auto btn-primary px-12 py-5 rounded-[1rem] text-lg font-bold flex items-center gap-3 justify-center"
             >
               Start the Forge
               <ArrowRight size={20} />
-            </a>
-            <button
+            </Link>
+            <Link
               id="hero-browse-btn"
-              onClick={onBrowseDirectory}
-              className="w-full md:w-auto border border-[#4f4255]/30 text-primary px-12 py-5 rounded-[1rem] text-lg font-medium hover:bg-[#292a2e]/30 transition-all"
+              href="/forge"
+              className="w-full md:w-auto border border-[#4f4255]/30 text-primary px-12 py-5 rounded-[1rem] text-lg font-medium hover:bg-[#292a2e]/30 transition-all text-center"
             >
-              Browse Directory
-            </button>
+              Browse Forge
+            </Link>
           </div>
         </section>
 
