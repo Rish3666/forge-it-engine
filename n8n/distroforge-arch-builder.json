@@ -26,9 +26,9 @@
       "parameters": {
         "agent": "conversationalReactDescription",
         "promptType": "define",
-        "text": "=User ID: {{ $json.userId }}\nApps requested: {{ $json.apps.join(', ') }}\nDesktop environment: {{ $json.desktop }}\nGPU type: {{ $json.gpu }}",
+        "text": "=Apps requested: {{ $json.apps.join(', ') }}\nDesktop environment: {{ $json.desktop }}\nGPU type: {{ $json.gpu }}\nRespond ONLY with package names separated by spaces.",
         "options": {
-          "systemMessage": "You are a Linux package resolver for Arch Linux. Translate the user's app list, desktop environment, and GPU type into an exact comma-separated string of official Arch Linux pacman package names. Rules:\n1. Use ONLY official archlinux.org package names - no AUR unless absolutely necessary.\n2. If GPU is NVIDIA, always add: nvidia-dkms,nvidia-utils,lib32-nvidia-utils\n3. If GPU is AMD, always add: mesa,vulkan-radeon,lib32-mesa\n4. Map desktop environments: kde->plasma, gnome->gnome, hyprland->hyprland, xfce->xfce4\n5. Output ONLY the comma-separated string - no explanation, no markdown, no extra text."
+          "systemMessage": "You are a Linux package resolver for Arch Linux. Translate app list, desktop environment, and GPU type into official Arch Linux pacman package names.\nRules:\n1. Use ONLY official archlinux.org package names. Avoid AUR unless absolutely necessary.\n2. If GPU is NVIDIA, always include: nvidia-dkms nvidia-utils lib32-nvidia-utils\n3. If GPU is AMD, always include: mesa vulkan-radeon lib32-mesa\n4. Map desktop environments: kde->plasma, gnome->gnome, hyprland->hyprland, xfce->xfce4\n5. Output ONLY a space-separated package list. No headings, no user IDs, no explanations, no markdown."
         }
       }
     },

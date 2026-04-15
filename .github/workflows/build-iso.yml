@@ -33,21 +33,25 @@ jobs:
       # --- BRANCH 1: ARCH LINUX ---
       - name: Build Arch ISO
         if: ${{ env.DISTRO == 'arch' }}
-        container:
-          image: archlinux:latest
-          options: --privileged
         run: |
-          pacman-key --init
-          pacman-key --populate archlinux
-          pacman -Sy --noconfirm archiso squashfs-tools libisoburn
-          
-          # Inject packages
-          echo "" >> ./releng/packages.x86_64
-          echo "# --- Forge It User Packages ---" >> ./releng/packages.x86_64
-          echo "$PACKAGES" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep -v '^$' >> ./releng/packages.x86_64
-          
-          mkarchiso -v -w /tmp/forge-work -o /tmp/output ./releng
-          mv /tmp/output/*.iso ./forge-it-arch.iso
+          docker run --rm --privileged \
+            -v "${GITHUB_WORKSPACE}:/workspace" \
+            -w /workspace \
+            -e PACKAGES="${PACKAGES}" \
+            archlinux:latest \
+            bash -lc '
+              pacman-key --init
+              pacman-key --populate archlinux
+              pacman -Sy --noconfirm archiso squashfs-tools libisoburn
+
+              # Inject packages
+              echo "" >> ./releng/packages.x86_64
+              echo "# --- Forge It User Packages ---" >> ./releng/packages.x86_64
+              echo "$PACKAGES" | tr ", " "\n\n" | sed "s/^ *//;s/ *$//" | grep -v "^$" >> ./releng/packages.x86_64
+
+              mkarchiso -v -w /tmp/forge-work -o /tmp/output ./releng
+              mv /tmp/output/*.iso ./forge-it-arch.iso
+            '
 
       # --- BRANCH 2: UBUNTU (The Lazy Autoinstall Way) ---
       - name: Build Ubuntu ISO
