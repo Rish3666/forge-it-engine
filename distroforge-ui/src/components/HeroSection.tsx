@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { featureBlocks, navLinks } from "@/data/mockData";
 
 // ---- HeroSection component ----
@@ -45,13 +45,6 @@ export default function HeroSection() {
 
           {/* Right actions */}
           <div className="flex items-center gap-6">
-            <button
-              id="nav-star-btn"
-              aria-label="Star on GitHub"
-              className="text-zinc-400 hover:text-primary transition-colors"
-            >
-              <Star size={20} />
-            </button>
             <button
               id="nav-download-btn"
               className="btn-primary px-6 py-2 text-sm font-label font-bold rounded-[1rem]"

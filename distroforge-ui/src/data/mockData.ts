@@ -77,10 +77,8 @@ export interface HardwareLine {
 // ---- Navigation ----
 
 export const navLinks: NavLink[] = [
-  { label: "Directory", href: "/directory" },
   { label: "The Forge", href: "/forge", active: true },
-  { label: "Sponsor", href: "/sponsor" },
-  { label: "GitHub", href: "https://github.com" },
+  { label: "GitHub", href: "https://github.com/Rish3666/forge-it-engine" },
 ];
 
 // ---- Hero feature blocks ----

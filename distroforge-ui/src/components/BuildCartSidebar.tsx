@@ -46,7 +46,7 @@ export default function BuildCartSidebar({
   return (
     <aside
       id="build-cart-sidebar"
-      className="fixed right-0 top-20 h-[calc(100vh-5rem)] w-80 flex flex-col p-6 z-40 border-l border-[#343439]/15 bg-[#1a1b20]"
+      className="w-80 h-full flex flex-col p-6 border-l border-[#343439]/15 bg-[#1a1b20] overflow-y-auto"
     >
       {/* ── Header ── */}
       <div className="mb-8">

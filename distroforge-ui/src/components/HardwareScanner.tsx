@@ -8,6 +8,7 @@ import {
   cpuOptions,
   gpuGroups,
   ramGroups,
+  navLinks,
   type HardwareLine,
 } from "@/data/mockData";
 
@@ -64,11 +65,21 @@ const detectCpu = (
   if (appleChip) {
     return `Apple ${appleChip.model} (${threads} browser threads reported) (Detected)`;
   }
-  if (/amd/i.test(userAgent)) return `AMD CPU (${threads} threads) (Detected)`;
-  if (/intel/i.test(userAgent))
+
+  const lowRenderer = (renderer ?? "").toLowerCase();
+  if (/amd/i.test(userAgent) || lowRenderer.includes("amd") || lowRenderer.includes("radeon"))
+    return `AMD CPU (${threads} threads) (Detected)`;
+
+  if (/intel/i.test(userAgent) || lowRenderer.includes("intel"))
     return `Intel CPU (${threads} threads) (Detected)`;
-  if (/arm|aarch64|apple/i.test(userAgent))
+
+  // Check for ARM/Apple Silicon specifically, avoiding misdetecting 'AppleWebKit'
+  const isArmUA = /arm|aarch64/i.test(userAgent);
+  const isAppleHardware = /\bapple\b/i.test(userAgent) && !/applewebkit/i.test(userAgent);
+  
+  if (isArmUA || isAppleHardware)
     return `ARM/Apple Silicon (${threads} threads) (Detected)`;
+
   return `Generic x86_64 (${threads} threads) (Detected)`;
 };
 
@@ -298,12 +309,7 @@ export default function HardwareScanner({
             DistroForge
           </Link>
           <div className="hidden md:flex items-center gap-8 font-label text-sm">
-            {[
-              { label: "Directory", href: "/forge" },
-              { label: "The Forge", href: "/forge", active: true },
-              { label: "Sponsor", href: "/" },
-              { label: "GitHub", href: "https://github.com" },
-            ].map((l) => (
+            {navLinks.map((l) => (
               <Link
                 key={l.label}
                 href={l.href}

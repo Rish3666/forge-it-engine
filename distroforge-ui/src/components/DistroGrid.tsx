@@ -65,6 +65,14 @@ export default function DistroGrid({
   const [activeTab, setActiveTab] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Map tab index → package category filter
+  const tabCategories: Record<number, string | null> = {
+    0: null,       // Desktop Environments — show DE cards, no packages
+    1: "gaming",
+    2: "development",
+    3: "media",
+  };
+
   const handleTogglePackage = (pkg: SoftwarePackage) => {
     let next: string[];
     if (selectedPackages.includes(pkg.id)) {
@@ -75,9 +83,13 @@ export default function DistroGrid({
     onSelectionChange?.(next);
   };
 
-  const filteredPackages = softwarePackages.filter((pkg) =>
-    pkg.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const categoryFilter = tabCategories[activeTab];
+
+  const filteredPackages = softwarePackages.filter((pkg) => {
+    const matchesSearch = pkg.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === null || pkg.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="w-full">
@@ -90,8 +102,8 @@ export default function DistroGrid({
             onClick={() => setActiveTab(i)}
             className={`font-label text-sm uppercase tracking-widest whitespace-nowrap pb-4 transition-colors ${
               activeTab === i
-                ? "text-secondary-container border-b-2 border-secondary-container"
-                : "text-[#d2c1d7] hover:text-primary"
+                ? "text-[#16ff9e] border-b-2 border-[#16ff9e]"
+                : "text-[#d2c1d7] hover:text-[#16ff9e]"
             }`}
           >
             {cat}
@@ -99,8 +111,8 @@ export default function DistroGrid({
         ))}
       </div>
 
-      {/* ── Desktop Environments: 4-col card grid ── */}
-      <section id="desktop-envs-section" className="mb-20">
+      {/* ── Desktop Environments: only on tab 0 ── */}
+      {activeTab === 0 && <section id="desktop-envs-section" className="mb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {desktopEnvironments.map((de) => {
             const isSelected = selectedDesktop === de.id;
@@ -165,10 +177,10 @@ export default function DistroGrid({
             );
           })}
         </div>
-      </section>
+      </section>}
 
-      {/* ── Software Packages: 3-col list grid ── */}
-      <section id="packages-section">
+      {/* ── Software Packages: hidden on tab 0 (Desktop Environments) ── */}
+      {activeTab !== 0 && <section id="packages-section">
         <div className="flex items-center justify-between mb-8">
           <h2 className="font-headline font-bold text-3xl tracking-tight">
             Software Packages
@@ -248,7 +260,7 @@ export default function DistroGrid({
             <ArrowRight size={18} />
           </button>
         </div>
-      </section>
+      </section>}
     </div>
   );
 }
