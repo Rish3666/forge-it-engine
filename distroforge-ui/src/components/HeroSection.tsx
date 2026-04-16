@@ -95,6 +95,13 @@ export default function HeroSection() {
             >
               Browse Forge
             </Link>
+            <Link
+              id="hero-quiz-btn"
+              href="/quiz"
+              className="w-full md:w-auto border border-[#56ffa8]/20 text-[#56ffa8] px-12 py-5 rounded-[1rem] text-lg font-medium hover:bg-[#56ffa8]/5 transition-all text-center"
+            >
+              ✦ Find My Distro
+            </Link>
           </div>
         </section>
 

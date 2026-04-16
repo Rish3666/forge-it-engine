@@ -50,19 +50,25 @@ const STATUS_COLORS: Record<BuildStatus, string> = {
   not_found: "text-zinc-400",
 };
 
-// Terminal-style log lines shown while a build is running
-const BUILD_LOGS = [
-  "[forge] Dispatching workflow to GitHub Actions…",
-  "[forge] Runner: ubuntu-latest assigned",
-  "[archiso] Initializing Arch Linux base container…",
-  "[pacman] Syncing package databases (core, extra, multilib)…",
-  "[pacman] Resolving dependency tree…",
-  "[forge] Injecting user-selected packages into packages.x86_64…",
-  "[mkarchiso] Building squashfs root filesystem (xz -9)…",
-  "[mkarchiso] Creating EFI partition…",
-  "[mkarchiso] Generating ISO 9660 filesystem…",
-  "[forge] Build complete. Uploading artifact…",
-];
+const getBuildLogs = (distro: string) => {
+  const pkgManager =
+    distro === "fedora" ? "dnf" : distro === "ubuntu" ? "apt" : "pacman";
+  const baseTool =
+    distro === "fedora" ? "live-respins" : distro === "ubuntu" ? "debootstrap" : "archiso";
+
+  return [
+    "[forge] Dispatching workflow to GitHub Actions…",
+    "[forge] Runner: ubuntu-latest assigned (GitHub build host)",
+    `[${baseTool}] Initializing ${distro} base environment…`,
+    `[${pkgManager}] Syncing package databases…`,
+    `[${pkgManager}] Resolving dependency tree…`,
+    "[forge] Injecting user-selected packages and tweaks…",
+    "[forge] Compiling custom kernel and modules…",
+    "[forge] Building compressed root filesystem…",
+    "[forge] Generating bootable ISO 9660 image…",
+    "[forge] Build complete. Uploading artifact to Cloud Storage…",
+  ];
+};
 
 function BuildingPageContent() {
   const searchParams = useSearchParams();
@@ -75,6 +81,8 @@ function BuildingPageContent() {
   });
   const [logLine, setLogLine] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+
+  const buildLogs = getBuildLogs(distro);
 
   // Poll the status API
   const pollStatus = useCallback(async () => {
@@ -111,10 +119,10 @@ function BuildingPageContent() {
     )
       return;
     const t = setInterval(() => {
-      setLogLine((prev) => Math.min(prev + 1, BUILD_LOGS.length - 1));
+      setLogLine((prev) => Math.min(prev + 1, buildLogs.length - 1));
     }, 4000);
     return () => clearInterval(t);
-  }, [statusData.status]);
+  }, [statusData.status, buildLogs.length]);
 
   // Elapsed time counter
   useEffect(() => {
@@ -224,7 +232,7 @@ function BuildingPageContent() {
           </div>
 
           <div className="p-6 font-mono text-xs leading-relaxed min-h-[220px] space-y-2">
-            {BUILD_LOGS.slice(0, logLine + 1).map((line, i) => (
+            {buildLogs.slice(0, logLine + 1).map((line, i) => (
               <div key={i} className="flex gap-3">
                 <span className="text-secondary-fixed shrink-0">$</span>
                 <span

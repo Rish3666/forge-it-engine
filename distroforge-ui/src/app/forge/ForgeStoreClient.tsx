@@ -12,13 +12,14 @@ import {
   Search,
   Bell,
   Settings,
-  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import DistroGrid from "@/components/DistroGrid";
 import BuildCartSidebar from "@/components/BuildCartSidebar";
 import {
   desktopEnvironments,
   softwarePackages,
+  distroOptions,
   type BuildCartItem,
 } from "@/data/mockData";
 
@@ -33,15 +34,16 @@ const wizardNav = [
 
 export default function ForgeStoreClient() {
   const router = useRouter();
-  const [activeStep] = useState("store");
+  const activeStep = "store";
+  const [selectedDistro, setSelectedDistro] = useState("arch");
   const [selectedDesktop, setSelectedDesktop] = useState("gnome");
   const [selectedPackages, setSelectedPackages] = useState<string[]>([
     "discord",
     "firefox",
   ]);
-  const [isBuilding, setIsBuilding] = useState(false);
-  const [buildError, setBuildError] = useState<string | null>(null);
 
+  const selectedDistroData =
+    distroOptions.find((d) => d.id === selectedDistro) ?? distroOptions[0];
   const selectedDesktopData =
     desktopEnvironments.find((desktop) => desktop.id === selectedDesktop) ??
     desktopEnvironments[0];
@@ -52,8 +54,8 @@ export default function ForgeStoreClient() {
     {
       id: "base",
       label: "Base Foundation",
-      name: "Arch Linux",
-      sizeMb: 650,
+      name: selectedDistroData.name,
+      sizeMb: selectedDistroData.sizeMb,
       isBase: true,
     },
     {
@@ -71,57 +73,16 @@ export default function ForgeStoreClient() {
     })),
   ];
 
-  const handleForgeSubmit = async (formData: {
-    distro: string;
-    selectedApps: string[];
-    gpuType: string;
-    desktopEnv: string;
-  }) => {
-    const userId = `user_${Math.random().toString(36).substring(2, 9)}`;
-    setIsBuilding(true);
-    setBuildError(null);
-    try {
-      const res = await fetch("/api/forge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          distro: formData.distro,
-          apps: formData.selectedApps,
-          gpu: formData.gpuType,
-          desktop: formData.desktopEnv,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorBody = await res.json().catch(() => null);
-        const errorMessage =
-          errorBody?.error ??
-          "Forge failed to start. Check n8n logs.";
-        throw new Error(errorMessage);
-      }
-
-      const data = await res.json();
-      const resolvedPackageString =
-        typeof data.packages === "string"
-          ? data.packages
-          : data.packages?.packages ?? formData.selectedApps.join(" ");
-      const resolvedDistro =
-        typeof data.packages?.distro === "string"
-          ? data.packages.distro
-          : formData.distro;
-
-      // Navigate to the building page with resolved packages in URL
-      const params = new URLSearchParams({
-        userId: data.userId ?? userId,
-        distro: resolvedDistro,
-        packages: resolvedPackageString,
-      });
-      router.push(`/forge/building?${params.toString()}`);
-    } catch (err) {
-      setBuildError(err instanceof Error ? err.message : "Build failed");
-      setIsBuilding(false);
-    }
+  const handleNavigateToReview = () => {
+    const params = new URLSearchParams({
+      distro: selectedDistro,
+      desktop: selectedDesktop,
+      packages: selectedPackages.join(","),
+      gpu: "Auto-Detected",
+      ram: "16GB DDR4",
+      cpu: "Generic x86_64",
+    });
+    router.push(`/forge/review?${params.toString()}`);
   };
 
   return (
@@ -246,31 +207,14 @@ export default function ForgeStoreClient() {
           })}
         </div>
 
-        {/* Build ISO button at bottom */}
+        {/* Review button at bottom of left sidebar */}
         <div className="mt-auto px-4 space-y-2">
-          {buildError && (
-            <p className="text-error text-[10px] font-label text-center">
-              {buildError}
-            </p>
-          )}
           <button
-            id="forge-build-iso-btn"
-            onClick={() =>
-              void handleForgeSubmit({
-                distro: "arch",
-                selectedApps: selectedPackages,
-                gpuType: "NVIDIA",
-                desktopEnv: selectedDesktop,
-              })
-            }
-            disabled={isBuilding}
-            className="w-full py-4 rounded-full btn-primary font-headline font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
+            id="forge-review-btn"
+            onClick={handleNavigateToReview}
+            className="w-full py-4 rounded-full btn-primary font-headline font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-2"
           >
-            {isBuilding ? (
-              <><Loader2 size={18} className="animate-spin" /> Building…</>
-            ) : (
-              "Build ISO"
-            )}
+            Review &amp; Forge →
           </button>
         </div>
       </aside>
@@ -318,6 +262,49 @@ export default function ForgeStoreClient() {
           </p>
         </header>
 
+        {/* Distro Selection Section */}
+        <section id="distro-selection" className="mb-16">
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="font-headline font-bold text-2xl text-white">
+              1. Choose Base Distro
+            </h2>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {distroOptions.map((distro) => {
+              const isActive = selectedDistro === distro.id;
+              return (
+                <button
+                  key={distro.id}
+                  onClick={() => setSelectedDistro(distro.id)}
+                  className={`p-6 rounded-[1.5rem] border-2 text-left transition-all ${
+                    isActive
+                      ? "bg-primary/10 border-primary shadow-primary-md"
+                      : "bg-[#1a1b20] border-white/5 hover:border-white/20"
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl ${
+                        isActive ? "bg-primary text-black" : "bg-white/5"
+                      }`}
+                    >
+                      {distro.name[0]}
+                    </div>
+                    {isActive && (
+                      <CheckCircle2 size={20} className="text-primary" />
+                    )}
+                  </div>
+                  <h3 className="font-headline font-bold text-lg mb-1">
+                    {distro.name}
+                  </h3>
+                  <p className="text-sm text-zinc-500">{distro.tagline}</p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Grid: desktop environments + packages */}
         <DistroGrid
           selectedDesktop={selectedDesktop}
@@ -330,7 +317,7 @@ export default function ForgeStoreClient() {
       {/* ── Right: Build Cart ── */}
       <BuildCartSidebar
         items={cartItems}
-        onNext={() => console.log("Navigate to final review")}
+        onNext={handleNavigateToReview}
         onExport={() => console.log("Export config JSON")}
         onClearAll={() => setSelectedPackages([])}
         onRemoveItem={(id) =>

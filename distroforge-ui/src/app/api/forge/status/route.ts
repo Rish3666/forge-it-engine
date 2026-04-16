@@ -14,9 +14,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN ?? "";
 const GITHUB_REPO = process.env.GITHUB_REPO ?? "Rish3666/forge-it-engine";
-const WORKFLOW_FILE = "build-iso.yml";
+
+// Helper to map distro to workflow file
+const getWorkflowFile = (distro: string) => {
+  return `${distro.toLowerCase()}-builder.yml`;
+};
 
 interface GitHubArtifact {
+  id: number;
   name: string;
   archive_download_url: string;
 }
@@ -48,10 +53,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const targetName = `forge-it-${userId}-${distro}`;
+    const workflowFile = getWorkflowFile(distro);
 
-    // List recent workflow runs for build-iso.yml
+    // List recent workflow runs for specific distro builder
     const runsRes = await fetch(
-      `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}/runs?per_page=20`,
+      `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${workflowFile}/runs?per_page=20`,
       {
         headers: {
           Authorization: `Bearer ${GITHUB_TOKEN}`,
@@ -102,7 +108,7 @@ export async function GET(request: NextRequest) {
           artifactName: targetName,
           downloadUrl:
             run.status === "completed" && run.conclusion === "success"
-              ? artifact.archive_download_url
+              ? `/api/forge/download?artifactId=${artifact.id}&name=${artifact.name}`
               : null,
         });
       }

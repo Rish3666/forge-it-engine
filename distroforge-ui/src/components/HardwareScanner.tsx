@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Cpu, Zap, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { Cpu, Zap, Shield, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import {
   terminalLines,
   cpuOptions,
-  gpuOptions,
-  ramOptions,
+  gpuGroups,
+  ramGroups,
   type HardwareLine,
 } from "@/data/mockData";
 
@@ -37,10 +37,14 @@ const wizardSteps = [
   { id: "finalize", label: "Finalize" },
 ];
 
-const detectAppleChip = (userAgent: string, renderer: string | null): string | null => {
+const detectAppleChip = (userAgent: string, renderer: string | null): { model: string; gen: number } | null => {
   const combined = `${userAgent} ${renderer ?? ""}`;
-  const match = combined.match(/\b(M[1-9](?:\s?(?:Pro|Max|Ultra))?)\b/i);
-  return match ? match[1].toUpperCase() : null;
+  const match = combined.match(/\b(M([1-9])(?:\s?(?:Pro|Max|Ultra))?)\b/i);
+  if (!match) return null;
+  return {
+    model: match[1].toUpperCase(),
+    gen: parseInt(match[2], 10),
+  };
 };
 
 const estimateAppleVram = (memory?: number): number => {
@@ -58,7 +62,7 @@ const detectCpu = (
 ): string => {
   const appleChip = detectAppleChip(userAgent, renderer);
   if (appleChip) {
-    return `Apple ${appleChip} (${threads} browser threads reported) (Detected)`;
+    return `Apple ${appleChip.model} (${threads} browser threads reported) (Detected)`;
   }
   if (/amd/i.test(userAgent)) return `AMD CPU (${threads} threads) (Detected)`;
   if (/intel/i.test(userAgent))
@@ -98,7 +102,7 @@ const detectGpu = (
 
   if (appleChip) {
     const estimatedVram = estimateAppleVram(memory);
-    return `Apple ${appleChip} GPU (Integrated, shared up to ~${estimatedVram}GB, high performance tier) (Detected)`;
+    return `Apple ${appleChip.model} GPU (Integrated, shared up to ~${estimatedVram}GB, high performance tier) (Detected)`;
   }
   if (info.includes("nvidia")) {
     const model = extractNvidiaModel(compactRenderer);
@@ -135,15 +139,17 @@ export default function HardwareScanner({
   onContinue,
 }: HardwareScannerProps) {
   const [cpu, setCpu] = useState(cpuOptions[0]);
-  const [gpu, setGpu] = useState(gpuOptions[0]);
-  const [ram, setRam] = useState(ramOptions[0]);
+  const [gpu, setGpu] = useState(gpuGroups[0].models[0]);
+  const [ram, setRam] = useState(ramGroups[0].options[0]);
   const [runtimeCpuOptions, setRuntimeCpuOptions] = useState(cpuOptions);
-  const [runtimeGpuOptions, setRuntimeGpuOptions] = useState(gpuOptions);
-  const [runtimeRamOptions, setRuntimeRamOptions] = useState(ramOptions);
+  const [runtimeGpuOptions, setRuntimeGpuOptions] = useState(gpuGroups);
+  const [runtimeRamOptions, setRuntimeRamOptions] = useState(ramGroups);
   const [runtimeTerminalLines, setRuntimeTerminalLines] =
     useState<HardwareLine[]>(terminalLines);
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
+  const [unsupportedAppleGen, setUnsupportedAppleGen] = useState<number | null>(null);
+  const [scanMode, setScanMode] = useState<"auto" | "manual">("auto");
 
   const getWebGlRenderer = (): string | null => {
     try {
@@ -178,13 +184,35 @@ export default function HardwareScanner({
         ? nav.deviceMemory
         : undefined;
 
+    const appleChip = detectAppleChip(userAgent, renderer);
     const detectedCpu = detectCpu(userAgent, renderer, threads);
     const detectedGpu = detectGpu(renderer, memory, userAgent);
     const detectedRam = detectRam(memory);
 
+    if (appleChip && appleChip.gen >= 2) {
+      setUnsupportedAppleGen(appleChip.gen);
+    } else {
+      setUnsupportedAppleGen(null);
+    }
+
     setRuntimeCpuOptions([detectedCpu, ...cpuOptions.filter((o) => o !== cpuOptions[0])]);
-    setRuntimeGpuOptions([detectedGpu, ...gpuOptions.filter((o) => o !== gpuOptions[0])]);
-    setRuntimeRamOptions([detectedRam, ...ramOptions.filter((o) => o !== ramOptions[0])]);
+    // Inject detected GPU into the matching vendor group or "Other"
+    const detectedGpuGroups = gpuGroups.map((group) => { return group; });
+    const autoGroup = {
+      vendor: "✦ Auto-Detected",
+      models: [detectedGpu],
+    };
+    const updatedGpuGroups = [autoGroup, ...detectedGpuGroups];
+    setRuntimeGpuOptions(updatedGpuGroups);
+
+    // Inject detected RAM into the right category
+    const detectedRamGroups = ramGroups.map((group) => { return group; });
+    const autoRamGroup = {
+      type: "✦ Auto-Detected",
+      description: "Hardware-detected memory",
+      options: [detectedRam],
+    };
+    setRuntimeRamOptions([autoRamGroup, ...detectedRamGroups]);
 
     setCpu(detectedCpu);
     setGpu(detectedGpu);
@@ -360,6 +388,74 @@ export default function HardwareScanner({
           </div>
         </div>
 
+        {/* Compatibility Alert for M2+ Macs */}
+        {unsupportedAppleGen && scanMode === "auto" && (
+          <div className="mb-12 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="bg-[#93000a]/10 border border-[#ffb4ab]/20 p-8 rounded-[1.5rem] flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Shield size={120} className="text-[#ffb4ab]" />
+              </div>
+              <div className="w-16 h-16 rounded-full bg-[#ffb4ab]/20 flex items-center justify-center shrink-0">
+                <Shield size={32} className="text-[#ffb4ab]" />
+              </div>
+              <div className="flex-1 space-y-2 relative z-10 text-center md:text-left">
+                <h3 className="text-2xl font-black font-headline text-white tracking-tight">
+                  Apple Silicon M{unsupportedAppleGen} Detected
+                </h3>
+                <p className="text-[#ffb4ab] text-sm max-w-2xl leading-relaxed font-medium">
+                  Forge ISOs are optimized for x86_64 architectures. While M1 is
+                  partially supported, M2+ chips require specialized bootloaders
+                  not yet compiled in our standard forge. We recommend
+                  installing <strong>Asahi Linux</strong> for the best native
+                  experience on this machine.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 shrink-0 relative z-10">
+                <a
+                  href="https://asahilinux.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#ffb4ab] text-[#93000a] px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white transition-colors text-center"
+                >
+                  Get Asahi Linux
+                </a>
+                <button
+                  onClick={() => setScanMode("manual")}
+                  className="bg-white/5 text-white/60 border border-white/10 px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white/10 transition-colors text-center"
+                >
+                  Forge for another PC
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Scan Mode Toggle */}
+        <div className="flex justify-center mb-12">
+          <div className="bg-[#1a1b20] p-1.5 rounded-2xl flex border border-white/5">
+            <button
+              onClick={() => setScanMode("auto")}
+              className={`px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                scanMode === "auto"
+                  ? "bg-primary text-black shadow-lg"
+                  : "text-zinc-500 hover:text-white"
+              }`}
+            >
+              Scan This Device
+            </button>
+            <button
+              onClick={() => setScanMode("manual")}
+              className={`px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                scanMode === "manual"
+                  ? "bg-primary text-black shadow-lg"
+                  : "text-zinc-500 hover:text-white"
+              }`}
+            >
+              Specify Target Specs
+            </button>
+          </div>
+        </div>
+
         {/* Content grid: 7/5 split */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* ── Left: Terminal ── */}
@@ -449,16 +545,23 @@ export default function HardwareScanner({
             </button>
           </div>
 
-          {/* ── Right: Manual Override ── */}
+          {/* ── Right: Manual Override / Target Specs ── */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-[#1a1b20] p-8 rounded-[1rem] space-y-8">
+            <div
+              className={`bg-[#1a1b20] p-8 rounded-[1rem] space-y-8 border-2 transition-all ${
+                scanMode === "manual"
+                  ? "border-primary/40 shadow-primary-md"
+                  : "border-transparent"
+              }`}
+            >
               <div className="space-y-1">
                 <h2 className="text-2xl font-bold text-white font-headline">
-                  Manual Override
+                  {scanMode === "auto" ? "Manual Override" : "Target Specifications"}
                 </h2>
                 <p className="text-zinc-500 text-sm">
-                  Adjust system parameters if auto-detection fails to capture
-                  specific configurations.
+                  {scanMode === "auto"
+                    ? "Adjust system parameters if auto-detection fails."
+                    : "Specify the hardware for the laptop you are building this for."}
                 </p>
               </div>
 
@@ -498,8 +601,12 @@ export default function HardwareScanner({
                     onChange={(e) => setGpu(e.target.value)}
                     className="w-full bg-[#292a2e] border-none text-white font-body px-4 py-4 rounded-[1rem] appearance-none cursor-pointer focus:ring-2 focus:ring-primary/30 transition-all"
                   >
-                    {runtimeGpuOptions.map((opt) => (
-                      <option key={opt}>{opt}</option>
+                    {runtimeGpuOptions.map((group) => (
+                      <optgroup key={group.vendor} label={group.vendor}>
+                        {group.models.map((model) => (
+                          <option key={model} value={model}>{model}</option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                 </div>
@@ -518,8 +625,12 @@ export default function HardwareScanner({
                     onChange={(e) => setRam(e.target.value)}
                     className="w-full bg-[#292a2e] border-none text-white font-body px-4 py-4 rounded-[1rem] appearance-none cursor-pointer focus:ring-2 focus:ring-primary/30 transition-all"
                   >
-                    {runtimeRamOptions.map((opt) => (
-                      <option key={opt}>{opt}</option>
+                    {runtimeRamOptions.map((group) => (
+                      <optgroup key={group.type} label={`${group.type} — ${group.description}`}>
+                        {group.options.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                 </div>

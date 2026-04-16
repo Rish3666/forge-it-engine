@@ -61,9 +61,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: 202 });
   } catch (err) {
     console.error("[/api/forge] Unexpected error:", err);
+    const url = new URL(N8N_WEBHOOK_URL);
     const message =
       err instanceof Error && /fetch failed|ECONNREFUSED|ENOTFOUND/i.test(err.message)
-        ? "Cannot reach n8n webhook. Set N8N_WEBHOOK_URL or start n8n on port 55000."
+        ? `Cannot reach n8n at ${url.host}. Please ensure n8n is running or check N8N_WEBHOOK_URL in .env.local.`
         : "Internal server error";
     return NextResponse.json(
       { error: message },

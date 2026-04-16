@@ -30,5 +30,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-custom-${{ github.event.inputs.userId }}
+          name: forge-it-${{ github.event.inputs.userId }}-ubuntu
           path: output/*.iso
