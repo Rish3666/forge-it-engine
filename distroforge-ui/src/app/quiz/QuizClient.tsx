@@ -490,7 +490,7 @@ function OptionCard({
             )}
           </div>
           {option.description && (
-            <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+            <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">
               {option.description}
             </p>
           )}
@@ -523,7 +523,7 @@ function ResultCard({
           >
             {distro.badge}
           </span>
-          <span className="text-xs text-zinc-400 font-mono">
+          <span className="text-xs text-zinc-600 font-mono">
             Best match for your profile
           </span>
         </div>
@@ -544,7 +544,7 @@ function ResultCard({
 
         {/* Strengths */}
         <div className="mb-12">
-          <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-mono mb-4">
+          <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-mono mb-4">
             Why it fits you
           </p>
           <ul className="space-y-3">
@@ -667,7 +667,7 @@ export default function QuizClient() {
             DistroForge
           </Link>
           {!finished && (
-            <div className="flex items-center gap-4 text-xs text-zinc-400 font-mono">
+            <div className="flex items-center gap-4 text-xs text-zinc-500 font-mono">
               <span>
                 Question {currentStep + 1} of {totalSteps}
               </span>
@@ -678,7 +678,7 @@ export default function QuizClient() {
           )}
           <Link
             href="/forge"
-            className="text-xs text-zinc-400 hover:text-white transition font-mono uppercase tracking-widest"
+            className="text-xs text-zinc-500 hover:text-white transition font-mono uppercase tracking-widest"
           >
             Skip to Forge →
           </Link>
@@ -694,7 +694,7 @@ export default function QuizClient() {
               <span className="text-[10px] font-mono uppercase tracking-widest text-[#b026ff] bg-[#b026ff]/10 px-3 py-1.5 rounded-full border border-[#b026ff]/20">
                 {question.category}
               </span>
-              <span className="text-[10px] text-zinc-400 font-mono">
+              <span className="text-[10px] text-zinc-600 font-mono">
                 Step {question.step} / {totalSteps}
               </span>
             </div>
@@ -704,7 +704,7 @@ export default function QuizClient() {
               {question.question}
             </h1>
             {question.subtitle && (
-              <p className="text-zinc-400 text-base mb-12">
+              <p className="text-zinc-500 text-base mb-12">
                 {question.subtitle}
               </p>
             )}
@@ -730,7 +730,7 @@ export default function QuizClient() {
 
             {/* Multi-select hint */}
             {question.type === "multi" && (
-              <p className="text-xs text-zinc-400 font-mono mb-6">
+              <p className="text-xs text-zinc-600 font-mono mb-6">
                 ✦ Select all that apply
               </p>
             )}
@@ -740,7 +740,7 @@ export default function QuizClient() {
               <button
                 onClick={handleBack}
                 disabled={currentStep === 0}
-                className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all px-4 py-2 rounded-xl hover:bg-white/5"
+                className="flex items-center gap-2 text-sm text-zinc-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all px-4 py-2 rounded-xl hover:bg-white/5"
               >
                 <ArrowLeft size={16} />
                 Back
@@ -771,7 +771,7 @@ export default function QuizClient() {
               <h1 className="text-5xl sm:text-6xl font-black tracking-tighter mb-4 font-[Space_Grotesk]">
                 Your Perfect Match
               </h1>
-              <p className="text-zinc-400 text-base max-w-md mx-auto">
+              <p className="text-zinc-500 text-base max-w-md mx-auto">
                 Based on your hardware, workflow, and personality — we've found
                 your ideal Linux distribution.
               </p>
@@ -783,7 +783,7 @@ export default function QuizClient() {
 
             {/* All scores preview */}
             <div className="mt-12 p-6 bg-[#1a1b20] rounded-2xl border border-white/5">
-              <p className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest mb-5">
+              <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-widest mb-5">
                 Full compatibility breakdown
               </p>
               <div className="space-y-4">

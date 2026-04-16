@@ -116,7 +116,7 @@ export default function ForgeStoreClient() {
                 className={`font-label text-sm uppercase tracking-widest transition-colors ${
                   link.active
                     ? "text-primary border-b-2 border-primary pb-1"
-                    : "text-zinc-400 hover:text-primary"
+                    : "text-[#343439] hover:text-primary"
                 }`}
               >
                 {link.label}
@@ -128,11 +128,11 @@ export default function ForgeStoreClient() {
         <div className="flex items-center space-x-6">
           {/* Search pill */}
           <div className="bg-[#292a2e] px-4 py-2 rounded-full flex items-center gap-3">
-            <Search size={16} className="text-zinc-500" />
+            <Search size={16} className="text-[#343439]" />
             <input
               id="forge-search"
               type="text"
-              className="bg-transparent border-none focus:ring-0 text-sm w-48 text-[#e3e2e8] placeholder-zinc-500"
+              className="bg-transparent border-none focus:ring-0 text-sm w-48 text-[#e3e2e8] placeholder-[#343439]"
               placeholder="Search components..."
             />
           </div>
@@ -197,7 +197,7 @@ export default function ForgeStoreClient() {
                 className={`flex items-center space-x-4 px-4 py-3 mx-2 rounded-full transition-all font-label text-xs uppercase tracking-widest font-bold ${
                   isActive
                     ? "bg-secondary-container text-[#121317] shadow-green-glow"
-                    : "text-zinc-400 hover:text-primary"
+                    : "text-[#343439] hover:text-primary"
                 }`}
               >
                 <Icon size={18} />
@@ -298,7 +298,7 @@ export default function ForgeStoreClient() {
                   <h3 className="font-headline font-bold text-lg mb-1">
                     {distro.name}
                   </h3>
-                  <p className="text-sm text-zinc-400">{distro.tagline}</p>
+                  <p className="text-sm text-zinc-500">{distro.tagline}</p>
                 </button>
               );
             })}

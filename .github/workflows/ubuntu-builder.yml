@@ -28,7 +28,7 @@ jobs:
           mv base.iso output/ubuntu-${{ github.event.inputs.userId }}.iso
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: forge-it-${{ github.event.inputs.userId }}-ubuntu
           path: output/*.iso

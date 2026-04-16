@@ -35,7 +35,7 @@ export default function HeroSection() {
                 className={
                   link.active
                     ? "text-primary font-bold border-b-2 border-primary pb-1 uppercase tracking-[0.2em] text-[10px] transition-colors"
-                    : "text-zinc-400 hover:text-primary transition-colors uppercase tracking-[0.2em] text-[10px]"
+                    : "text-zinc-500 hover:text-primary transition-colors uppercase tracking-[0.2em] text-[10px]"
                 }
               >
                 {link.label}
@@ -91,7 +91,7 @@ export default function HeroSection() {
             <Link
               id="hero-browse-btn"
               href="/forge"
-              className="w-full md:w-auto border border-white/20 text-primary px-12 py-5 rounded-[1rem] text-lg font-medium hover:bg-[#292a2e]/30 transition-all text-center"
+              className="w-full md:w-auto border border-[#4f4255]/30 text-primary px-12 py-5 rounded-[1rem] text-lg font-medium hover:bg-[#292a2e]/30 transition-all text-center"
             >
               Browse Forge
             </Link>
@@ -125,7 +125,7 @@ export default function HeroSection() {
               <h2 className="text-4xl font-bold tracking-tight font-headline">
                 {block.title}
               </h2>
-              <p className="text-zinc-400 font-body text-lg leading-relaxed">
+              <p className="text-zinc-500 font-body text-lg leading-relaxed">
                 {block.description}
               </p>
             </div>
@@ -165,7 +165,7 @@ export default function HeroSection() {
               <a
                 key={link}
                 href="#"
-                className="text-zinc-500 hover:text-primary transition-colors uppercase tracking-[0.2em] text-[10px]"
+                className="text-zinc-600 hover:text-primary transition-colors uppercase tracking-[0.2em] text-[10px]"
               >
                 {link}
               </a>
