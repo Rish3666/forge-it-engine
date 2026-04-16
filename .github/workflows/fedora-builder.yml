@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build ISO via Docker
         run: |
@@ -30,7 +30,7 @@ jobs:
             "
 
       - name: Upload Result
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: forge-it-${{ github.event.inputs.userId }}-fedora
           path: fedora-custom.iso

@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # --- BRANCH 1: ARCH LINUX ---
       - name: Build Arch ISO
@@ -84,7 +84,7 @@ jobs:
           touch forge-it-fedora.iso
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: forge-it-${{ env.USER_ID }}-${{ env.DISTRO }}
           path: forge-it-*.iso

@@ -310,7 +310,7 @@ export default function HardwareScanner({
                 className={
                   l.active
                     ? "text-primary font-bold border-b-2 border-primary pb-1"
-                    : "text-zinc-400 hover:text-zinc-100 transition-colors"
+                    : "text-zinc-300 hover:text-zinc-100 transition-colors"
                 }
               >
                 {l.label}
@@ -338,7 +338,7 @@ export default function HardwareScanner({
                 className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
                   isActive
                     ? "bg-secondary-fixed/10 text-secondary-fixed font-bold"
-                    : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30"
+                    : "text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/30"
                 }`}
               >
                 <Cpu size={16} />
@@ -369,7 +369,7 @@ export default function HardwareScanner({
 
           {/* Progress indicator */}
           <div className="text-right">
-            <div className="text-zinc-500 font-label text-sm uppercase tracking-widest mb-2">
+            <div className="text-zinc-400 font-label text-sm uppercase tracking-widest mb-2">
               Progress
             </div>
             <div className="flex gap-2">
@@ -473,7 +473,7 @@ export default function HardwareScanner({
                   <div className="w-3 h-3 rounded-full bg-[#bdc7d9]/40" />
                   <div className="w-3 h-3 rounded-full bg-[#56ffa8]/40" />
                 </div>
-                <div className="text-[10px] font-label text-zinc-500 uppercase tracking-widest">
+                <div className="text-[10px] font-label text-zinc-400 uppercase tracking-widest">
                   Forge-Terminal v0.4.2
                 </div>
                 <div className="w-12" />
@@ -532,7 +532,7 @@ export default function HardwareScanner({
                   <h3 className="text-xl font-bold text-white mb-1 font-headline">
                     {isScanning ? "Scanning..." : "Auto-Detect My Hardware"}
                   </h3>
-                  <p className="text-zinc-500 font-label text-sm">
+                  <p className="text-zinc-400 font-label text-sm">
                     Forge will automatically scan your environment for optimal
                     drivers.
                   </p>
@@ -558,7 +558,7 @@ export default function HardwareScanner({
                 <h2 className="text-2xl font-bold text-white font-headline">
                   {scanMode === "auto" ? "Manual Override" : "Target Specifications"}
                 </h2>
-                <p className="text-zinc-500 text-sm">
+                <p className="text-zinc-400 text-sm">
                   {scanMode === "auto"
                     ? "Adjust system parameters if auto-detection fails."
                     : "Specify the hardware for the laptop you are building this for."}
@@ -650,7 +650,7 @@ export default function HardwareScanner({
               <button
                 id="hw-back-btn"
                 onClick={onBack}
-                className="text-zinc-500 hover:text-white font-label text-sm uppercase tracking-widest flex items-center gap-2 transition-colors"
+                className="text-zinc-400 hover:text-white font-label text-sm uppercase tracking-widest flex items-center gap-2 transition-colors"
               >
                 <ChevronLeft size={18} />
                 Back

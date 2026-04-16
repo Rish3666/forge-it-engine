@@ -145,7 +145,7 @@ function BuildingPageContent() {
       {/* Back link */}
       <Link
         href="/forge"
-        className="absolute top-8 left-8 flex items-center gap-2 text-zinc-500 hover:text-primary font-label text-xs uppercase tracking-widest transition-colors"
+        className="absolute top-8 left-8 flex items-center gap-2 text-zinc-400 hover:text-primary font-label text-xs uppercase tracking-widest transition-colors"
       >
         <ArrowLeft size={16} />
         Back to Forge
@@ -203,7 +203,7 @@ function BuildingPageContent() {
               key={m.label}
               className="glass-card p-5 rounded-[1rem] text-center"
             >
-              <div className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-1">
+              <div className="font-label text-[10px] uppercase tracking-widest text-zinc-400 mb-1">
                 {m.label}
               </div>
               <div className="font-headline font-bold text-xl">
@@ -224,7 +224,7 @@ function BuildingPageContent() {
               <div className="w-3 h-3 rounded-full bg-[#bdc7d9]/40" />
               <div className="w-3 h-3 rounded-full bg-[#56ffa8]/40" />
             </div>
-            <div className="text-[10px] font-label text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+            <div className="text-[10px] font-label text-zinc-400 uppercase tracking-widest flex items-center gap-2">
               <Terminal size={12} />
               forge-build — {distro}@GitHub-Actions
             </div>
@@ -239,7 +239,7 @@ function BuildingPageContent() {
                   className={
                     i === logLine && isRunning
                       ? "text-white"
-                      : "text-zinc-500"
+                      : "text-zinc-400"
                   }
                 >
                   {line}
@@ -268,7 +268,7 @@ function BuildingPageContent() {
         {/* Package summary */}
         {packages && (
           <div className="glass-card p-6 rounded-[1rem]">
-            <div className="font-label text-[10px] uppercase tracking-widest text-zinc-500 mb-3">
+            <div className="font-label text-[10px] uppercase tracking-widest text-zinc-400 mb-3">
               Resolved Package Manifest
             </div>
             <div className="flex flex-wrap gap-2">
@@ -299,7 +299,7 @@ function BuildingPageContent() {
             <button
               id="build-waiting-btn"
               disabled
-              className="flex-1 py-5 rounded-[1rem] bg-[#292a2e] text-zinc-500 font-label font-bold uppercase tracking-widest text-sm cursor-not-allowed"
+              className="flex-1 py-5 rounded-[1rem] bg-[#292a2e] text-zinc-400 font-label font-bold uppercase tracking-widest text-sm cursor-not-allowed"
             >
               {isFailed ? "Build Failed" : "Building… (Auto-downloading when ready)"}
             </button>
@@ -308,7 +308,7 @@ function BuildingPageContent() {
           <Link
             id="build-new-btn"
             href="/forge"
-            className="flex-1 py-5 rounded-[1rem] border border-[#4f4255]/30 text-primary font-label font-bold uppercase tracking-widest text-center text-sm hover:bg-[#292a2e]/30 transition-all flex items-center justify-center"
+            className="flex-1 py-5 rounded-[1rem] border border-white/20 text-primary font-label font-bold uppercase tracking-widest text-center text-sm hover:bg-[#292a2e]/30 transition-all flex items-center justify-center"
           >
             Build Another
           </Link>
